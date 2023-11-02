@@ -44,6 +44,8 @@ dependencies:
   just_audio: ^0.9.35
   microphone: ^0.1.0
   mp_audio_stream: ^0.1.4
+  flutter_picker: ^2.1.0
+  quiver: ^3.2.1
 
 dev_dependencies:
   flutter_test:
