@@ -44,6 +44,12 @@ dependencies:
   just_audio: ^0.9.35
   microphone: ^0.1.0
   mp_audio_stream: ^0.1.4
+  flutter_picker: ^2.1.0
+  quiver: ^3.2.1
+  # amplify_auth_cognito: ^1.0.0
+  # amplify_authenticator: ^1.0.0
+  # amplify_flutter: ^1.0.0
+  
 
 dev_dependencies:
   flutter_test:
