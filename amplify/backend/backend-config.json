@@ -1,8 +1,18 @@
 {
   "auth": {
-    "flutternoiseapp1172177b095": {
+    "flutternoiseapp1173af34b933af34b93": {
       "customAuth": false,
-      "dependsOn": [],
+      "dependsOn": [
+        {
+          "attributes": [
+            "Arn",
+            "Name"
+          ],
+          "category": "function",
+          "resourceName": "flutternoiseapp1173af34b933af34b93PreSignup",
+          "triggerProvider": "Cognito"
+        }
+      ],
       "frontendAuthConfig": {
         "mfaConfiguration": "OFF",
         "mfaTypes": [
@@ -25,6 +35,31 @@
       },
       "providerPlugin": "awscloudformation",
       "service": "Cognito"
+    }
+  },
+  "function": {
+    "flutternoiseapp1173af34b933af34b93PreSignup": {
+      "build": true,
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    }
+  },
+  "parameters": {
+    "AMPLIFY_function_flutternoiseapp1173af34b933af34b93PreSignup_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "flutternoiseapp1173af34b933af34b93PreSignup"
+        }
+      ]
+    },
+    "AMPLIFY_function_flutternoiseapp1173af34b933af34b93PreSignup_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "flutternoiseapp1173af34b933af34b93PreSignup"
+        }
+      ]
     }
   },
   "storage": {
