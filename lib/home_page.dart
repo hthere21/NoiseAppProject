@@ -13,16 +13,15 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:fftea/fftea.dart';
 import 'package:queue/queue.dart';
 
-void main() => runApp(MaterialApp(
-      home: AudioStreamingApp(),
-    ));
 
-class AudioStreamingApp extends StatefulWidget {
+class HomePage extends StatefulWidget {
   @override
-  AudioStreamingAppState createState() => new AudioStreamingAppState();
+  State<HomePage> createState() => _HomePageState();
 }
 
-class AudioStreamingAppState extends State<AudioStreamingApp> {
+class _HomePageState extends State<HomePage> {
+  
+
   int recordingTimerDuration = 0; // Duration in seconds
   List<double> RaValues = [];
   int? sampleRate;
@@ -235,74 +234,73 @@ class AudioStreamingAppState extends State<AudioStreamingApp> {
         );
       },
     );
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: Text('Audio Recording'),
-        ),
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: <Widget>[
-              Container(
-                margin: EdgeInsets.all(25),
-                child: Column(
-                  children: [
-                    RichText(
-                      text: TextSpan(
-                        text: 'Remaining Time: ',
-                        style: TextStyle(
-                            fontSize: 20,
-                            color: Colors.green), // The default text style
-                        children: <TextSpan>[
-                          TextSpan(
-                            text: recordingTimerDuration > 0
-                                ? '$recordingTimerDuration seconds'
-                                : '${recordingTime?.toStringAsFixed(2) ?? "0.00"} seconds',
-                            style: TextStyle(
+    @override
+    Widget build(BuildContext context) {
+      return Scaffold(
+          appBar: AppBar(
+            title: Text('Audio Recording'),
+          ),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  margin: EdgeInsets.all(25),
+                  child: Column(
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          text: 'Remaining Time: ',
+                          style: TextStyle(
                               fontSize: 20,
-                              color: Colors.red,
+                              color: Colors.green), // The default text style
+                          children: <TextSpan>[
+                            TextSpan(
+                              text: recordingTimerDuration > 0
+                                  ? '$recordingTimerDuration seconds'
+                                  : '${recordingTime?.toStringAsFixed(2) ?? "0.00"} seconds',
+                              style: TextStyle(
+                                fontSize: 20,
+                                color: Colors.red,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    Container(
-                      margin: EdgeInsets.all(20),
-                      child: Text(
-                        isRecording ? "MIC: ON" : "MIC: OFF",
-                        style: TextStyle(fontSize: 25, color: Colors.blue),
+                      Container(
+                        margin: EdgeInsets.all(20),
+                        child: Text(
+                          isRecording ? "MIC: ON" : "MIC: OFF",
+                          style: TextStyle(fontSize: 25, color: Colors.blue),
+                        ),
                       ),
-                    ),
-                    Text('Max amp: ${latestBuffer?.reduce(max)}'),
-                    Text('Min amp: ${latestBuffer?.reduce(min)}'),
-                  ],
+                      Text('Max amp: ${latestBuffer?.reduce(max)}'),
+                      Text('Min amp: ${latestBuffer?.reduce(min)}'),
+                    ],
+                  ),
                 ),
+              ],
+            ),
+          ),
+          floatingActionButton: Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              FloatingActionButton(
+                backgroundColor: isRecording ? Colors.red : Colors.green,
+                child: isRecording ? Icon(Icons.stop) : Icon(Icons.mic),
+                onPressed: isRecording ? stop : start,
+              ),
+              SizedBox(width: 10),
+              FloatingActionButton(
+                child: Icon(Icons.timer),
+                onPressed: () {
+                  _showTimerPicker(context);
+                },
               ),
             ],
           ),
-        ),
-        floatingActionButton: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            FloatingActionButton(
-              backgroundColor: isRecording ? Colors.red : Colors.green,
-              child: isRecording ? Icon(Icons.stop) : Icon(Icons.mic),
-              onPressed: isRecording ? stop : start,
-            ),
-            SizedBox(width: 10),
-            FloatingActionButton(
-              child: Icon(Icons.timer),
-              onPressed: () {
-                _showTimerPicker(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
+      );
   }
 }

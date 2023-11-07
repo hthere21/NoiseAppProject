@@ -48,8 +48,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-  }
-} 
+  } 
 
   @override
   Widget build(BuildContext context) {
@@ -58,23 +57,6 @@ class _MyAppState extends State<MyApp> {
         switch (state.currentStep) {
           case AuthenticatorStep.confirmSignUp:
             return Scaffold(
-                appBar: AppBar(
-                  title: const Text("Confirmation"),
-                ),
-                body: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                          "Please wait for the owners to confirm the sign up."),
-                      ElevatedButton(
-                          onPressed: () => state.changeStep(
-                                AuthenticatorStep.signIn,
-                              ),
-                          child: const Text('Return To Sign In'))
-                    ],
-                  ),
-                ));
               appBar: AppBar(
                 title: const Text("Confirmation"),
               ),
