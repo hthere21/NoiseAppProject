@@ -8,20 +8,34 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
 
 import 'amplifyconfiguration.dart';
+import 'settings_page.dart';
 
-void main() {
-  runApp(MyApp());
-}
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:amplify_storage_s3/amplify_storage_s3.dart';
+import 'amplifyconfiguration.dart';
 
-void _configureAmplify() async {
+Future<void> _configureAmplify() async {
   try {
-    await Amplify.addPlugin(AmplifyAuthCognito());
+    final auth = AmplifyAuthCognito();
+    final storage = AmplifyStorageS3();
+    await Amplify.addPlugins([auth, storage]);
+
+    // call Amplify.configure to use the initialized categories in your app
     await Amplify.configure(amplifyconfig);
-    print('Successfully configured');
   } on Exception catch (e) {
-    print('Error configuring Amplify: $e');
+    safePrint('An error occurred configuring Amplify: $e');
   }
 }
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await _configureAmplify();
+  runApp(MyApp());
+}
+// void main() {
+//   runApp(MyApp());
+// }
 
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);
@@ -34,7 +48,6 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    _configureAmplify();
   }
 
   @override
