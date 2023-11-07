@@ -1,103 +1,96 @@
-import 'dart:math';
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:audio_streamer/audio_streamer.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'home_page.dart'; // Import the home_page.dart file
+import 'data_page.dart';
+import 'settings_page.dart';
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
+import 'package:amplify_authenticator/amplify_authenticator.dart';
+import 'package:amplify_flutter/amplify_flutter.dart';
+import 'package:flutter/material.dart';
 
-void main() => runApp(new AudioStreamingApp());
+import 'amplifyconfiguration.dart';
+import 'settings_page.dart';
 
-class AudioStreamingApp extends StatefulWidget {
-  @override
-  AudioStreamingAppState createState() => new AudioStreamingAppState();
+void main() {
+  runApp(MyApp());
 }
 
-class AudioStreamingAppState extends State<AudioStreamingApp> {
-  int? sampleRate;
-  bool isRecording = false;
-  List<double> audio = [];
-  List<double>? latestBuffer;
-  double? recordingTime;
-  StreamSubscription<List<double>>? audioSubscription;
-
-  /// Check if microphone permission is granted.
-  Future<bool> checkPermission() async => await Permission.microphone.isGranted;
-
-  /// Request the microphone permission.
-  Future<void> requestPermission() async =>
-      await Permission.microphone.request();
-
-  /// Call-back on audio sample.
-  void onAudio(List<double> buffer) async {
-    audio.addAll(buffer);
-
-    // Get the actual sampling rate, if not already known.
-    sampleRate ??= await AudioStreamer().actualSampleRate;
-    recordingTime = audio.length / sampleRate!;
-    print(audio);
-
-    setState(() => latestBuffer = buffer);
+void _configureAmplify() async {
+  try {
+    await Amplify.addPlugin(AmplifyAuthCognito());
+    await Amplify.configure(amplifyconfig);
+    print('Successfully configured');
+  } on Exception catch (e) {
+    print('Error configuring Amplify: $e');
   }
+}
 
-  /// Call-back on error.
-  void handleError(Object error) {
-    setState(() => isRecording = false);
-    print(error);
-  }
-
-  /// Start audio sampling.
-  void start() async {
-    // Check permission to use the microphone.
-    //
-    // Remember to update the AndroidManifest file (Android) and the
-    // Info.plist and pod files (iOS).
-    if (!(await checkPermission())) {
-      await requestPermission();
-    }
-
-    // Set the sampling rate - works only on Android.
-    AudioStreamer().sampleRate = 44100;
-
-    // Start listening to the audio stream.
-    audioSubscription =
-        AudioStreamer().audioStream.listen(onAudio, onError: handleError);
-
-    setState(() => isRecording = true);
-  }
-
-  /// Stop audio sampling.
-  void stop() async {
-    audioSubscription?.cancel();
-    setState(() => isRecording = false);
-  }
+class MyApp extends StatefulWidget {
+  const MyApp({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-        home: Scaffold(
-          body: Center(
-              child: Column(
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  @override
+  void initState() {
+    super.initState();
+    _configureAmplify();
+  } 
+
+  @override
+  Widget build(BuildContext context) {
+    return Authenticator(
+      authenticatorBuilder: (BuildContext context, AuthenticatorState state) {
+        switch (state.currentStep) {
+          case AuthenticatorStep.confirmSignUp:
+            return Scaffold(
+              appBar: AppBar(
+                title: const Text("Confirmation"),
+              ),
+              body: Center(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                Container(
-                    margin: EdgeInsets.all(25),
-                    child: Column(children: [
-                      Container(
-                        child: Text(isRecording ? "Mic: ON" : "Mic: OFF",
-                            style: TextStyle(fontSize: 25, color: Colors.blue)),
-                        margin: EdgeInsets.only(top: 20),
-                      ),
-                      Text(''),
-                      Text('Max amp: ${latestBuffer?.reduce(max)}'),
-                      Text('Min amp: ${latestBuffer?.reduce(min)}'),
-                      Text(
-                          '${recordingTime?.toStringAsFixed(2)} seconds recorded.'),
-                    ])),
-              ])),
-          floatingActionButton: FloatingActionButton(
-            backgroundColor: isRecording ? Colors.red : Colors.green,
-            child: isRecording ? Icon(Icons.stop) : Icon(Icons.mic),
-            onPressed: isRecording ? stop : start,
+                  children: [
+                    const Text("Please wait for the owners to confirm the sign up."),
+                    ElevatedButton(
+                      onPressed: () => state.changeStep(
+                        AuthenticatorStep.signIn,
+                      ), 
+                      child: const Text('Return To Sign In'))
+                  ],
+                ),
+              )
+            );
+          default:
+            return null;
+        }
+      },
+      child: MaterialApp(
+        builder: Authenticator.builder(),
+        home: DefaultTabController(
+          length: 3,
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text('Noise App'),
+              bottom: TabBar(
+                tabs: [
+                  Tab(text: 'Home'),
+                  Tab(text: 'Data'),
+                  Tab(text: 'Settings'),
+                ],
+              ),
+            ),
+            body: TabBarView(
+              children: [
+                HomePage(), // Use HomePage as the content for the "Home" tab
+                DataStoragePage(),
+                SettingsPage(),
+              ],
+            ),
           ),
         ),
-      );
+      ),
+    );
+  }
 }
