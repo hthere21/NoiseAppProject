@@ -235,7 +235,6 @@ class AudioStreamingAppState extends State<AudioStreamingApp> {
         );
       },
     );
-  }
 
   @override
   Widget build(BuildContext context) {
