@@ -1,9 +1,12 @@
 import 'dart:collection';
 import 'dart:math';
 import 'dart:async';
-import 'package:collection/collection.dart';
 import 'dart:core';
+import 'package:collection/collection.dart';
 import 'package:eval_ex/built_ins.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import 'package:cupertino_icons/cupertino_icons.dart';
 
 import 'package:flutter/material.dart';
 import 'package:audio_streamer/audio_streamer.dart';
@@ -11,7 +14,9 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:fftea/fftea.dart';
 import 'package:queue/queue.dart';
 
-void main() => runApp(new AudioStreamingApp());
+void main() => runApp(MaterialApp(
+      home: AudioStreamingApp(),
+    ));
 
 class AudioStreamingApp extends StatefulWidget {
   @override
@@ -19,20 +24,19 @@ class AudioStreamingApp extends StatefulWidget {
 }
 
 class AudioStreamingAppState extends State<AudioStreamingApp> {
-  //Calculating Ra values beforehand
+  int recordingTimerDuration = 0; // Duration in seconds
   List<double> RaValues = [];
-  //Other initialization
   int? sampleRate;
   bool isRecording = false;
   List<double> audio = [];
   List<double>? latestBuffer;
   double? recordingTime;
+  Timer? countdownTimer; // Added timer
   final audioDataQueue = ListQueue<List<double>>();
   StreamSubscription<List<double>>? audioSubscription;
-  //
   DateTime? recordingStartTime;
 
-  //
+  @override
   void initState() {
     super.initState();
     calculateRaValues();
@@ -53,8 +57,32 @@ class AudioStreamingAppState extends State<AudioStreamingApp> {
         (pow(f, 2) + pow(12200, 2)) *
         sqrt(pow(f, 2) + pow(107.7, 2)) *
         sqrt(pow(f, 2) + pow(737.9, 2));
+
+    if (denominator == 0) {
+      return 0.0;
+    }
+
     final Ra = numerator / denominator;
     return 2.0 + 20 * log10(Ra);
+  }
+
+  void setRecordingTimer(int durationInSeconds) {
+    setState(() {
+      recordingTimerDuration = durationInSeconds;
+    });
+  }
+
+  void startCountdown() {
+    countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+      setState(() {
+        if (recordingTimerDuration > 0) {
+          recordingTimerDuration--;
+        } else {
+          timer.cancel();
+          stop();
+        }
+      });
+    });
   }
 
   /// Call-back on audio sample.
@@ -114,69 +142,166 @@ class AudioStreamingAppState extends State<AudioStreamingApp> {
     setState(() => latestBuffer = buffer);
   }
 
-  /// Check if microphone permission is granted.
   Future<bool> checkPermission() async => await Permission.microphone.isGranted;
 
-  /// Request the microphone permission.
   Future<void> requestPermission() async =>
       await Permission.microphone.request();
 
-  /// Call-back on error.
   void handleError(Object error) {
     setState(() => isRecording = false);
     print(error);
   }
 
-  /// Start audio sampling.
   void start() async {
-    // Check permission to use the microphone.
-    //
-    // Remember to update the AndroidManifest file (Android) and the
-    // Info.plist and pod files (iOS).
     if (!(await checkPermission())) {
       await requestPermission();
     }
 
-    // Start listening to the audio stream.
+    AudioStreamer().sampleRate = 44100;
+
     audioSubscription =
         AudioStreamer().audioStream.listen(onAudio, onError: handleError);
 
-    setState(() => isRecording = true);
+    setState(() {
+      isRecording = true;
+    });
+
+    if (recordingTimerDuration > 0) {
+      startCountdown(); // Start the countdown timer
+    }
   }
 
-  /// Stop audio sampling.
-  void stop() async {
+  void stop() {
     audioSubscription?.cancel();
-    setState(() => isRecording = false);
+    countdownTimer?.cancel(); // Cancel the countdown timer
+    setState(() {
+      isRecording = false;
+    });
+  }
+
+  void _showTimerPicker(BuildContext context) {
+    setRecordingTimer(0);
+    int newHours = 0;
+    int newMinutes = 0;
+    int newSeconds = 0;
+
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) {
+        return Container(
+          height: 216,
+          color: Colors.white,
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CupertinoButton(
+                    child: Text('Cancel'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  CupertinoButton(
+                    child: Text('Done'),
+                    onPressed: () {
+                      int totalSeconds =
+                          (newHours * 3600) + (newMinutes * 60) + newSeconds;
+                      setRecordingTimer(totalSeconds);
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
+              Expanded(
+                child: CupertinoTimerPicker(
+                  mode: CupertinoTimerPickerMode.hms,
+                  initialTimerDuration: Duration(
+                    hours: newHours,
+                    minutes: newMinutes,
+                    seconds: newSeconds,
+                  ),
+                  onTimerDurationChanged: (Duration duration) {
+                    newHours = duration.inHours;
+                    newMinutes = (duration.inMinutes % 60);
+                    newSeconds = (duration.inSeconds % 60);
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-        home: Scaffold(
-          body: Center(
-              child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                Container(
-                    margin: EdgeInsets.all(25),
-                    child: Column(children: [
-                      Container(
-                        child: Text(isRecording ? "Mic: ON" : "Mic: OFF",
-                            style: TextStyle(fontSize: 25, color: Colors.blue)),
-                        margin: EdgeInsets.only(top: 20),
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(
+          title: Text('Audio Recording'),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Container(
+                margin: EdgeInsets.all(25),
+                child: Column(
+                  children: [
+                    RichText(
+                      text: TextSpan(
+                        text: 'Remaining Time: ',
+                        style: TextStyle(
+                            fontSize: 20,
+                            color: Colors.green), // The default text style
+                        children: <TextSpan>[
+                          TextSpan(
+                            text: recordingTimerDuration > 0
+                                ? '$recordingTimerDuration seconds'
+                                : '${recordingTime?.toStringAsFixed(2) ?? "0.00"} seconds',
+                            style: TextStyle(
+                              fontSize: 20,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
                       ),
-                      Text(''),
-                      Text('Max amp: ${latestBuffer?.reduce(max)}'),
-                      Text('Min amp: ${latestBuffer?.reduce(min)}'),
-                      Text(
-                          '${recordingTime?.toStringAsFixed(2)} seconds recorded.'),
-                    ])),
-              ])),
-          floatingActionButton: FloatingActionButton(
-            backgroundColor: isRecording ? Colors.red : Colors.green,
-            child: isRecording ? Icon(Icons.stop) : Icon(Icons.mic),
-            onPressed: isRecording ? stop : start,
+                    ),
+                    Container(
+                      margin: EdgeInsets.all(20),
+                      child: Text(
+                        isRecording ? "MIC: ON" : "MIC: OFF",
+                        style: TextStyle(fontSize: 25, color: Colors.blue),
+                      ),
+                    ),
+                    Text('Max amp: ${latestBuffer?.reduce(max)}'),
+                    Text('Min amp: ${latestBuffer?.reduce(min)}'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ),
-      );
+        floatingActionButton: Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            FloatingActionButton(
+              backgroundColor: isRecording ? Colors.red : Colors.green,
+              child: isRecording ? Icon(Icons.stop) : Icon(Icons.mic),
+              onPressed: isRecording ? stop : start,
+            ),
+            SizedBox(width: 10),
+            FloatingActionButton(
+              child: Icon(Icons.timer),
+              onPressed: () {
+                _showTimerPicker(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
