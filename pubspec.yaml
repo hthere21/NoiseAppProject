@@ -46,10 +46,12 @@ dependencies:
   mp_audio_stream: ^0.1.4
   flutter_picker: ^2.1.0
   quiver: ^3.2.1
-  # amplify_auth_cognito: ^1.0.0
-  # amplify_authenticator: ^1.0.0
-  # amplify_flutter: ^1.0.0
-  
+  amplify_api: ^1.0.0
+  amplify_auth_cognito: ^1.0.0
+  amplify_authenticator: ^1.0.0
+  amplify_flutter: ^1.0.0
+  amplify_storage_s3: ^1.0.0
+  file_picker: ^5.1.5
 
 dev_dependencies:
   flutter_test:

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'aws_service.dart'; // Import the AWS service file
+import 'package:path_provider/path_provider.dart';
 
 class DataStoragePage extends StatefulWidget {
   @override
@@ -95,10 +96,16 @@ class _DataStoragePageState extends State<DataStoragePage> {
     }
   }
 
+  // void handleUpload() {
+  //   // // Call the AWS service to handle the upload
+  //   // final awsService = AwsService();
+  //   // awsService.handleUpload(selectedItem);
+  // }
   void handleUpload() {
-    // // Call the AWS service to handle the upload
-    // final awsService = AwsService();
-    // awsService.handleUpload(selectedItem);
+    final awsService = AwsS3Service();
+    // Replace 'your/s3/bucket/key' and 'localFilePath' with your specific values
+    // awsService.uploadIOFile('/Users/christian/Desktop/IMG_2193 copy.jpg');
+    awsService.uploadImage();
   }
 
   @override
