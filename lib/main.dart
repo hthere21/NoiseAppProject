@@ -137,9 +137,6 @@ class AudioStreamingAppState extends State<AudioStreamingApp> {
       await requestPermission();
     }
 
-    // Set the sampling rate - works only on Android.
-    AudioStreamer().sampleRate = 44100;
-
     // Start listening to the audio stream.
     audioSubscription =
         AudioStreamer().audioStream.listen(onAudio, onError: handleError);
