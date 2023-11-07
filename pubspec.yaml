@@ -50,6 +50,12 @@ dependencies:
   get: ^4.6.5
   flutter_picker: ^2.1.0
   quiver: ^3.2.1
+  amplify_api: ^1.0.0
+  amplify_auth_cognito: ^1.0.0
+  amplify_authenticator: ^1.5.1
+  amplify_flutter: ^1.6.0
+  amplify_storage_s3: ^1.0.0
+  file_picker: ^5.1.5
 
 dev_dependencies:
   flutter_test:
