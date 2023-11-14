@@ -13,14 +13,15 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:fftea/fftea.dart';
 import 'package:queue/queue.dart';
 
-
 class HomePage extends StatefulWidget {
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  
+  //Interval selections
+  int selectedIntervalInSeconds = 1; // default interval is 1 second
+  List<double> accumulatedDBAValues = [];
 
   int recordingTimerDuration = 0; // Duration in seconds
   List<double> RaValues = [];
@@ -38,6 +39,34 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     calculateRaValues();
+  }
+
+  void checkAccumulatedArray() {
+    // Check if recording has stopped
+    if (!isRecording && accumulatedDBAValues.isNotEmpty) {
+      List<double> valuesToCalculate = accumulatedDBAValues;
+      accumulatedDBAValues = [];
+      // Calculate average, min, max and print the values
+      final averageDBA = valuesToCalculate.sum / valuesToCalculate.length;
+      final minDBA = valuesToCalculate.reduce(min);
+      final maxDBA = valuesToCalculate.reduce(max);
+      print("Average dBA: $averageDBA, Min dBA: $minDBA, Max dBA: $maxDBA");
+    }
+  }
+
+  // Function to process accumulated dBA values
+  void processAccumulatedDBAValues() {
+    int valuesToTake = 22 * selectedIntervalInSeconds;
+    List<double> valuesToCalculate =
+        accumulatedDBAValues.sublist(0, valuesToTake + 1);
+    accumulatedDBAValues = accumulatedDBAValues.sublist(valuesToTake + 1);
+
+    // Calculate average, min, max and print the values
+    final averageDBA = valuesToCalculate.sum / valuesToTake;
+    final minDBA = valuesToCalculate.reduce(min);
+    final maxDBA = valuesToCalculate.reduce(max);
+
+    print("Average dBA: $averageDBA, Min dBA: $minDBA, Max dBA: $maxDBA");
   }
 
   void calculateRaValues() {
@@ -89,10 +118,8 @@ class _HomePageState extends State<HomePage> {
       stop();
       return;
     }
-    // print("Start recording: " + DateTime.now().toString());
     audio.addAll(buffer);
     audioDataQueue.add(buffer);
-
     if (audioDataQueue.length >= 10) {
       // Process 10 chunks of 19200 values
       for (int i = 0; i < 10; i++) {
@@ -130,14 +157,19 @@ class _HomePageState extends State<HomePage> {
           // print(final_dBA);
           dBA_Arrays.add(final_dBA);
         }
-        // print(dBA_Arrays);
-        final averageDBA = (dBA_Arrays.sum) / 10;
-        print("Current Average dBA: " + averageDBA.toString());
-        // print("Finish analyze: " + DateTime.now().toString());
+
+        accumulatedDBAValues.addAll(dBA_Arrays);
+        // print(accumulatedDBAValues.length);
+        // Check if enough values are accumulated based on the selected interval
+        num requiredLength = ((selectedIntervalInSeconds * 1000) / 45).round();
+        // print(requiredLength);
+        if (accumulatedDBAValues.length >= requiredLength) {
+          // Call the function to process accumulated dBA values
+          processAccumulatedDBAValues();
+        }
         dBA_Arrays = [];
       }
     }
-
     // Get the actual sampling rate, if not already known.
     sampleRate ??= await AudioStreamer().actualSampleRate;
     setState(() => latestBuffer = buffer);
@@ -166,9 +198,9 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       isRecording = true;
     });
-
+    // Start the countdown timer
     if (recordingTimerDuration > 0) {
-      startCountdown(); // Start the countdown timer
+      startCountdown();
     }
   }
 
@@ -178,6 +210,55 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       isRecording = false;
     });
+    checkAccumulatedArray();
+  }
+
+  void _showIntervalPicker(BuildContext context) {
+    showCupertinoModalPopup(
+      context: context,
+      builder: (context) {
+        return Container(
+          height: 216,
+          color: Colors.white,
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CupertinoButton(
+                    child: Text('Cancel'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                  CupertinoButton(
+                    child: Text('Done'),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                  ),
+                ],
+              ),
+              Expanded(
+                child: CupertinoPicker(
+                  itemExtent: 32,
+                  onSelectedItemChanged: (int index) {
+                    setState(() {
+                      selectedIntervalInSeconds = index + 1;
+                    });
+                  },
+                  children: List.generate(59, (index) {
+                    return Center(
+                      child: Text((index + 1).toString()),
+                    );
+                  }),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _showTimerPicker(BuildContext context) {
@@ -236,71 +317,86 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-    @override
-    Widget build(BuildContext context) {
-      return Scaffold(
-          appBar: AppBar(
-            title: Text('Audio Recording'),
-          ),
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                Container(
-                  margin: EdgeInsets.all(25),
-                  child: Column(
-                    children: [
-                      RichText(
-                        text: TextSpan(
-                          text: 'Remaining Time: ',
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Audio Recording'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Container(
+              margin: EdgeInsets.all(25),
+              child: Column(
+                children: [
+                  RichText(
+                    text: TextSpan(
+                      text: 'Remaining Time: ',
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Colors.green,
+                      ),
+                      children: <TextSpan>[
+                        TextSpan(
+                          text: recordingTimerDuration > 0
+                              ? '$recordingTimerDuration seconds'
+                              : '${recordingTime?.toStringAsFixed(2) ?? "0.00"} seconds',
                           style: TextStyle(
-                              fontSize: 20,
-                              color: Colors.green), // The default text style
-                          children: <TextSpan>[
-                            TextSpan(
-                              text: recordingTimerDuration > 0
-                                  ? '$recordingTimerDuration seconds'
-                                  : '${recordingTime?.toStringAsFixed(2) ?? "0.00"} seconds',
-                              style: TextStyle(
-                                fontSize: 20,
-                                color: Colors.red,
-                              ),
-                            ),
-                          ],
+                            fontSize: 20,
+                            color: Colors.red,
+                          ),
                         ),
-                      ),
-                      Container(
-                        margin: EdgeInsets.all(20),
-                        child: Text(
-                          isRecording ? "MIC: ON" : "MIC: OFF",
-                          style: TextStyle(fontSize: 25, color: Colors.blue),
-                        ),
-                      ),
-                      Text('Max amp: ${latestBuffer?.reduce(max)}'),
-                      Text('Min amp: ${latestBuffer?.reduce(min)}'),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                  Container(
+                    margin: EdgeInsets.all(20),
+                    child: Text(
+                      isRecording ? "MIC: ON" : "MIC: OFF",
+                      style: TextStyle(fontSize: 25, color: Colors.blue),
+                    ),
+                  ),
+                  Text('Max amp: ${latestBuffer?.reduce(max)}'),
+                  Text('Min amp: ${latestBuffer?.reduce(min)}'),
+                ],
+              ),
             ),
+            SizedBox(
+                height:
+                    20), // Add space between the time duration and interval selection
+            Text(
+              'Interval Selection: ${selectedIntervalInSeconds} seconds',
+              style: TextStyle(fontSize: 18, color: Colors.black),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          FloatingActionButton(
+            backgroundColor: isRecording ? Colors.red : Colors.green,
+            child: isRecording ? Icon(Icons.stop) : Icon(Icons.mic),
+            onPressed: isRecording ? stop : start,
           ),
-          floatingActionButton: Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              FloatingActionButton(
-                backgroundColor: isRecording ? Colors.red : Colors.green,
-                child: isRecording ? Icon(Icons.stop) : Icon(Icons.mic),
-                onPressed: isRecording ? stop : start,
-              ),
-              SizedBox(width: 10),
-              FloatingActionButton(
-                child: Icon(Icons.timer),
-                onPressed: () {
-                  _showTimerPicker(context);
-                },
-              ),
-            ],
+          SizedBox(width: 10),
+          FloatingActionButton(
+            child: Icon(Icons.timer),
+            onPressed: () {
+              _showTimerPicker(context);
+            },
           ),
-      );
+          SizedBox(width: 10),
+          FloatingActionButton(
+            child: Icon(Icons.repeat),
+            onPressed: () {
+              _showIntervalPicker(context);
+            },
+          ),
+        ],
+      ),
+    );
   }
 }
