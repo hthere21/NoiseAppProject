@@ -18,10 +18,10 @@ import 'dart:io';
 import 'local_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'aws_service.dart';
+import 'package:geolocator/geolocator.dart';
 
 
 const columnsForNoiseData = ['timeStamp', 'lat', 'lon', 'avg', 'min', 'max'];
-import 'package:geolocator/geolocator.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -91,7 +91,7 @@ class _HomePageState extends State<HomePage> {
     calculateRaValues();
   }
 
-  void exportCSV(String fileName, List<Map<String,dynamic>> noiseData) {
+  void exportCSV(String fileName, List<dynamic> noiseData) {
     List<List<dynamic>> rows = [];
     rows.add(columnsForNoiseData);
 
@@ -104,55 +104,22 @@ class _HomePageState extends State<HomePage> {
   }
 
   void sendToDataPage() {
-    List<Map<String,dynamic>> TEMP_DATA = [
-      {"timeStamp": 2000000, "lat": "144234.97534313396318", 
-        "lon": "101234234.22998536005622", "avg": 500,
-        "min": 30, "max": 30},
-      {"timeStamp": 2000000, "lat": "1432423.97534313396318", 
-      "lon": "10324321.22998536005622", "avg": 500,
-      "min": 30, "max": 30},
-    ];
+    // List<Map<String,dynamic>> TEMP_DATA = [
+    //   {"timeStamp": 2000000, "lat": "144234.97534313396318", 
+    //     "lon": "101234234.22998536005622", "avg": 500,
+    //     "min": 30, "max": 30},
+    //   {"timeStamp": 2000000, "lat": "1432423.97534313396318", 
+    //   "lon": "10324321.22998536005622", "avg": 500,
+    //   "min": 30, "max": 30},
+    // ];
 
     String fileName = '${DateTime.now().toString()}.csv';
 
-    exportCSV(fileName, TEMP_DATA);
+    exportCSV(fileName, dataList);
 
     setState(() {
       
-      data.add(DataItem(data.length + 1, fileName, TEMP_DATA));
-    });
-
-  }
-
-  void exportCSV(String fileName, List<Map<String,dynamic>> noiseData) {
-    List<List<dynamic>> rows = [];
-    rows.add(columnsForNoiseData);
-
-    for (var data in noiseData) {
-      rows.add([data['timeStamp'], data['avg'], data['min'], data['max'], data['lat'], data['lon']]);
-    }
-
-    String csv = const ListToCsvConverter().convert(rows);
-    writeContent(fileName, csv);
-  }
-
-  void sendToDataPage() {
-    List<Map<String,dynamic>> TEMP_DATA = [
-      {"timeStamp": 2000000, "lat": "144234.97534313396318", 
-        "lon": "101234234.22998536005622", "avg": 500,
-        "min": 30, "max": 30},
-      {"timeStamp": 2000000, "lat": "1432423.97534313396318", 
-      "lon": "10324321.22998536005622", "avg": 500,
-      "min": 30, "max": 30},
-    ];
-
-    String fileName = '${DateTime.now().toString()}.csv';
-
-    exportCSV(fileName, TEMP_DATA);
-
-    setState(() {
-      
-      data.add(DataItem(data.length + 1, fileName, TEMP_DATA));
+      data.add(DataItem(data.length + 1, fileName, dataList));
     });
 
   }
@@ -228,7 +195,7 @@ class _HomePageState extends State<HomePage> {
       print(dataList);
 
       //Send data page
-
+      sendToDataPage();
       ////////////////
     }
   }
