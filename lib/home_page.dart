@@ -7,7 +7,6 @@ import 'package:eval_ex/built_ins.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cupertino_icons/cupertino_icons.dart';
-
 import 'package:audio_streamer/audio_streamer.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:fftea/fftea.dart';
@@ -62,6 +61,7 @@ class _HomePageState extends State<HomePage> {
   List<double> accumulatedDBAValues = [];
 
   int recordingTimerDuration = 0; // Duration in seconds
+  int initialrecordingTimerDuration = 0;
   List<double> RaValues = [];
 
   int? sampleRate;
@@ -69,7 +69,7 @@ class _HomePageState extends State<HomePage> {
   List<double> audio = [];
   List<double>? latestBuffer;
   double? recordingTime;
-  Timer? countdownTimer; // Added timer
+  Timer? countdownTimer;
   final audioDataQueue = ListQueue<List<double>>();
   StreamSubscription<List<double>>? audioSubscription;
   DateTime? recordingStartTime;
@@ -80,34 +80,47 @@ class _HomePageState extends State<HomePage> {
     calculateRaValues();
   }
 
-  Future<bool> _handleLocationPermission() async {
-    bool serviceEnabled;
-    LocationPermission permission;
-
-    serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              'Location services are disabled. Please enable the services')));
-      return false;
-    }
-    permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
-      permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Location permissions are denied')));
-        return false;
-      }
-    }
-    if (permission == LocationPermission.deniedForever) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              'Location permissions are permanently denied, we cannot request permissions.')));
-      return false;
-    }
-    return true;
+  void reset() {
+    setState(() {
+      isRecording = false;
+      recordingTimerDuration = 0;
+      initialrecordingTimerDuration = 0;
+      accumulatedDBAValues.clear();
+      audio.clear();
+      latestBuffer = null;
+      dataList.clear();
+    });
   }
+
+  //Permission for the geolocation
+  // Future<bool> _handleLocationPermission() async {
+  //   bool serviceEnabled;
+  //   LocationPermission permission;
+
+  //   serviceEnabled = await Geolocator.isLocationServiceEnabled();
+  //   if (!serviceEnabled) {
+  //     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+  //         content: Text(
+  //             'Location services are disabled. Please enable the services')));
+  //     return false;
+  //   }
+  //   permission = await Geolocator.checkPermission();
+  //   if (permission == LocationPermission.denied) {
+  //     permission = await Geolocator.requestPermission();
+  //     if (permission == LocationPermission.denied) {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //           const SnackBar(content: Text('Location permissions are denied')));
+  //       return false;
+  //     }
+  //   }
+  //   if (permission == LocationPermission.deniedForever) {
+  //     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+  //         content: Text(
+  //             'Location permissions are permanently denied, we cannot request permissions.')));
+  //     return false;
+  //   }
+  //   return true;
+  // }
 
   void checkAccumulatedArray() async {
     // Check if recording has stopped
@@ -122,13 +135,6 @@ class _HomePageState extends State<HomePage> {
       double averageDBA = 10 * log10(sumOfDBA / valuesToCalculate.length);
       final minDBA = valuesToCalculate.reduce(min);
       final maxDBA = valuesToCalculate.reduce(max);
-      // final hasPermission = await _handleLocationPermission();
-      // if (!hasPermission) return;
-      // Position position = await Geolocator.getCurrentPosition(
-      //     desiredAccuracy: LocationAccuracy.low);
-
-      // var latitude = position.latitude.toString();
-      // var longitude = position.longitude.toString();
       var timeStamp = (DateTime.now()).toString();
 
       ProcessedValues processedValues = ProcessedValues(
@@ -143,17 +149,20 @@ class _HomePageState extends State<HomePage> {
       );
       dataList.add(processedValues);
       print(dataList);
+
+      //Send data page
+
+      ////////////////
     }
   }
 
   // Function to process accumulated dBA values
   void processAccumulatedDBAValues() async {
-    int valuesToTake = (22.2 * selectedIntervalInSeconds).round();
+    int valuesToTake = ((selectedIntervalInSeconds * 1000) / 43.5374).round();
     List<double> valuesToCalculate = accumulatedDBAValues.sublist(
         0, min(valuesToTake + 1, accumulatedDBAValues.length));
     accumulatedDBAValues = accumulatedDBAValues
         .sublist(min(valuesToTake + 1, accumulatedDBAValues.length));
-
     // Calculate the sum of dBA values
     double sumOfDBA =
         valuesToCalculate.fold(0, (acc, dBA) => acc + pow(10, dBA / 10));
@@ -163,13 +172,6 @@ class _HomePageState extends State<HomePage> {
     final minDBA = valuesToCalculate.reduce(min);
     final maxDBA = valuesToCalculate.reduce(max);
     var timeStamp = (DateTime.now()).toString();
-    // final hasPermission = await _handleLocationPermission();
-    // if (!hasPermission) return;
-    // Position position = await Geolocator.getCurrentPosition(
-    //     desiredAccuracy: LocationAccuracy.low);
-
-    // var latitude = position.latitude.toString();
-    // var longitude = position.longitude.toString();
 
     ProcessedValues processedValues = ProcessedValues(
       timeStamp: timeStamp,
@@ -212,10 +214,12 @@ class _HomePageState extends State<HomePage> {
   void setRecordingTimer(int durationInSeconds) {
     setState(() {
       recordingTimerDuration = durationInSeconds;
+      initialrecordingTimerDuration = durationInSeconds;
     });
   }
 
   void startCountdown() {
+    print(recordingTimerDuration);
     countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() {
         if (recordingTimerDuration > 0) {
@@ -223,6 +227,7 @@ class _HomePageState extends State<HomePage> {
         } else {
           timer.cancel();
           stop();
+          reset();
         }
       });
     });
@@ -268,14 +273,12 @@ class _HomePageState extends State<HomePage> {
         final dBAvalue = pow(10, ((dBAvalue_i) / 10));
         dBAValues.add(dBAvalue as double);
       }
-      // print(dBValues.sum);
       final final_dBA = (10 * log10((dBAValues.sum)));
-      // print(final_dBA);
       dBA_Arrays.add(final_dBA);
     }
     accumulatedDBAValues.addAll(dBA_Arrays);
     // Check if enough values are accumulated based on the selected interval
-    num requiredLength = ((selectedIntervalInSeconds * 1000) / 45).round();
+    num requiredLength = ((selectedIntervalInSeconds * 1000) / 43.5374).round();
     // print(requiredLength);
     if (accumulatedDBAValues.length >= requiredLength) {
       // Call the function to process accumulated dBA values
@@ -285,6 +288,17 @@ class _HomePageState extends State<HomePage> {
 
     // Get the actual sampling rate, if not already known.
     sampleRate ??= await AudioStreamer().actualSampleRate;
+    double recordingTimeOnAudio = audio.length / sampleRate!;
+    // print(recordingTimeOnAudio);
+    if (recordingTimeOnAudio > initialrecordingTimerDuration) {
+      setState(() {
+        recordingTimerDuration = 0;
+        recordingTimeOnAudio = 0;
+        buffer = [];
+      });
+      return;
+    }
+
     setState(() => latestBuffer = buffer);
   }
 
@@ -302,8 +316,11 @@ class _HomePageState extends State<HomePage> {
     if (!(await checkPermission())) {
       await requestPermission();
     }
-
     AudioStreamer().sampleRate = 44100;
+    // Start the countdown timer
+    if (recordingTimerDuration > 0) {
+      startCountdown();
+    }
 
     audioSubscription =
         AudioStreamer().audioStream.listen(onAudio, onError: handleError);
@@ -311,17 +328,15 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       isRecording = true;
     });
-    // Start the countdown timer
-    if (recordingTimerDuration > 0) {
-      startCountdown();
-    }
   }
 
   void stop() {
     audioSubscription?.cancel();
-    countdownTimer?.cancel(); // Cancel the countdown timer
+    countdownTimer?.cancel();
     setState(() {
       isRecording = false;
+      recordingTimerDuration = 0;
+      initialrecordingTimerDuration = 0;
     });
     checkAccumulatedArray();
   }
