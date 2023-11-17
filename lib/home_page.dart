@@ -219,7 +219,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   void startCountdown() {
-    print(recordingTimerDuration);
     countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() {
         if (recordingTimerDuration > 0) {
@@ -227,7 +226,6 @@ class _HomePageState extends State<HomePage> {
         } else {
           timer.cancel();
           stop();
-          reset();
         }
       });
     });
@@ -339,6 +337,7 @@ class _HomePageState extends State<HomePage> {
       initialrecordingTimerDuration = 0;
     });
     checkAccumulatedArray();
+    reset();
   }
 
   void _showIntervalPicker(BuildContext context) {
