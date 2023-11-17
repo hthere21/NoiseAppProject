@@ -10,6 +10,17 @@ import 'package:cupertino_icons/cupertino_icons.dart';
 import 'package:audio_streamer/audio_streamer.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:fftea/fftea.dart';
+import 'package:queue/queue.dart';
+import 'data_page.dart';
+import 'package:intl/intl.dart';
+import 'package:csv/csv.dart';
+import 'dart:io';
+import 'local_storage.dart';
+import 'package:path_provider/path_provider.dart';
+import 'aws_service.dart';
+
+
+const columnsForNoiseData = ['timeStamp', 'lat', 'lon', 'avg', 'min', 'max'];
 import 'package:geolocator/geolocator.dart';
 
 class HomePage extends StatefulWidget {
@@ -78,6 +89,72 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     calculateRaValues();
+  }
+
+  void exportCSV(String fileName, List<Map<String,dynamic>> noiseData) {
+    List<List<dynamic>> rows = [];
+    rows.add(columnsForNoiseData);
+
+    for (var data in noiseData) {
+      rows.add([data['timeStamp'], data['avg'], data['min'], data['max'], data['lat'], data['lon']]);
+    }
+
+    String csv = const ListToCsvConverter().convert(rows);
+    writeContent(fileName, csv);
+  }
+
+  void sendToDataPage() {
+    List<Map<String,dynamic>> TEMP_DATA = [
+      {"timeStamp": 2000000, "lat": "144234.97534313396318", 
+        "lon": "101234234.22998536005622", "avg": 500,
+        "min": 30, "max": 30},
+      {"timeStamp": 2000000, "lat": "1432423.97534313396318", 
+      "lon": "10324321.22998536005622", "avg": 500,
+      "min": 30, "max": 30},
+    ];
+
+    String fileName = '${DateTime.now().toString()}.csv';
+
+    exportCSV(fileName, TEMP_DATA);
+
+    setState(() {
+      
+      data.add(DataItem(data.length + 1, fileName, TEMP_DATA));
+    });
+
+  }
+
+  void exportCSV(String fileName, List<Map<String,dynamic>> noiseData) {
+    List<List<dynamic>> rows = [];
+    rows.add(columnsForNoiseData);
+
+    for (var data in noiseData) {
+      rows.add([data['timeStamp'], data['avg'], data['min'], data['max'], data['lat'], data['lon']]);
+    }
+
+    String csv = const ListToCsvConverter().convert(rows);
+    writeContent(fileName, csv);
+  }
+
+  void sendToDataPage() {
+    List<Map<String,dynamic>> TEMP_DATA = [
+      {"timeStamp": 2000000, "lat": "144234.97534313396318", 
+        "lon": "101234234.22998536005622", "avg": 500,
+        "min": 30, "max": 30},
+      {"timeStamp": 2000000, "lat": "1432423.97534313396318", 
+      "lon": "10324321.22998536005622", "avg": 500,
+      "min": 30, "max": 30},
+    ];
+
+    String fileName = '${DateTime.now().toString()}.csv';
+
+    exportCSV(fileName, TEMP_DATA);
+
+    setState(() {
+      
+      data.add(DataItem(data.length + 1, fileName, TEMP_DATA));
+    });
+
   }
 
   void reset() {
@@ -186,7 +263,7 @@ class _HomePageState extends State<HomePage> {
     dataList.add(processedValues);
   }
 
-// Calculating Ra
+
   void calculateRaValues() {
     for (int i = 1; i <= 960; i++) {
       double freq = 22.97 * i;
@@ -226,6 +303,7 @@ class _HomePageState extends State<HomePage> {
         } else {
           timer.cancel();
           stop();
+          
         }
       });
     });
@@ -234,6 +312,7 @@ class _HomePageState extends State<HomePage> {
   /// Call-back on audio sample.
   void onAudio(List<double> buffer) async {
     if (recordingTimerDuration == 0) {
+      sendToDataPage();
       stop();
       return;
     }
