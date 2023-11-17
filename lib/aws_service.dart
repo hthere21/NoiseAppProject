@@ -44,10 +44,11 @@ class AwsS3Service {
 
   Future<void> uploadCSVFile(io.File csvFile, String studyId) async {
     final awsFile = AWSFilePlatform.fromFile(csvFile);
+    String userId = await getUserId();
     try {
       final uploadResult = await Amplify.Storage.uploadFile(
         localFile: awsFile, 
-        key: '$studyId/${csvFile.path.split('/').last}'
+        key: '$studyId/$userId/${csvFile.path.split('/').last}'
       ).result;
       safePrint('Uploaded file: ${uploadResult.uploadedItem.key}');
     } on StorageException catch (e) {

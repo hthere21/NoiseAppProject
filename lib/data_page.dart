@@ -5,12 +5,14 @@ import 'package:path_provider/path_provider.dart';
 import 'local_storage.dart';
 import 'dart:io';
 
+// All rows of data to be shown. Keeps track of any additions of recordings 
 List<DataItem> data = [
     DataItem(1, "Item 1", []),
     DataItem(2, "Item 2", []),
     DataItem(3, "Item 3", []),
   ];
 
+// Checks if the data has already been loaded
 bool prevDataLoaded = false;
 
 const List<DataColumn> COLUMNS = [
@@ -156,7 +158,17 @@ class _DataStoragePageState extends State<DataStoragePage> {
                     child: const Text('Delete'), // Add Delete button
                   ),
                   ElevatedButton(
-                    onPressed: handleUpload,
+                    onPressed: () {
+                      try {
+                        handleUpload();
+                        _showUploadConfirmation(context);
+                      }
+                      catch (e) {
+                        print(e);
+                        _showUploadFailure(context);
+                      }
+                      
+                    },
                     child: const Text('Upload'), // Add Upload button
                   ),
                   ElevatedButton(
@@ -270,7 +282,47 @@ class _DataStoragePageState extends State<DataStoragePage> {
       handleClosePopup();
     }
   }
-
+  void _showUploadConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Upload Confirmed'),
+          content: const Text('Successfully Uploaded!'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                // Close the AlertDialog
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+  
+  void _showUploadFailure(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Upload Failed'),
+          content: const Text('Failed to upload... Try Again Later.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                // Close the AlertDialog
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
   // void handleUpload() {
   //   // // Call the AWS service to handle the upload
   //   // final awsService = AwsService();

@@ -63,21 +63,21 @@ class _HomePageState extends State<HomePage> {
 
   void sendToDataPage() {
     List<Map<String,dynamic>> TEMP_DATA = [
-      {"timeStamp": 123456, "lat": "14.97534313396318", 
-        "lon": "101.22998536005622", "avg": 123,
-        "min": 5.0, "max": 500},
-      {"timeStamp": 123556, "lat": "14.97534313396318", 
-      "lon": "101.22998536005622", "avg": 123,
-      "min": 5, "max": 500},
+      {"timeStamp": 2000000, "lat": "144234.97534313396318", 
+        "lon": "101234234.22998536005622", "avg": 500,
+        "min": 30, "max": 30},
+      {"timeStamp": 2000000, "lat": "1432423.97534313396318", 
+      "lon": "10324321.22998536005622", "avg": 500,
+      "min": 30, "max": 30},
     ];
 
-    String currTime = DateTime.now().toString();
+    String fileName = '${DateTime.now().toString()}.csv';
 
-    exportCSV(currTime, TEMP_DATA);
+    exportCSV(fileName, TEMP_DATA);
 
     setState(() {
       
-      data.add(DataItem(data.length + 1, currTime, TEMP_DATA));
+      data.add(DataItem(data.length + 1, fileName, TEMP_DATA));
     });
 
   }

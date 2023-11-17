@@ -14,8 +14,8 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final studyIdController = TextEditingController();
-  
+  final studyIdController = TextEditingController(text: studyId);
+
 
   Future<void> _signOut(context) async {
     final result = await Amplify.Auth.signOut(
@@ -54,9 +54,12 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
               ElevatedButton(
-                onPressed: () => setState(() {
-                  studyId = studyIdController.text;
-                }), 
+                onPressed: () { 
+                  setState(() {
+                    studyId = studyIdController.text;
+                  });
+                    FocusScope.of(context).unfocus();
+                }, 
                 child: const Text("Save")
               ),
               ElevatedButton(

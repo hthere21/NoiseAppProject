@@ -98,7 +98,7 @@ class _MyAppState extends State<MyApp> {
                 HomePage(), // Use HomePage as the content for the "Home" tab
                 DataStoragePage(),
                 SettingsPage(),
-              ],
+              ], 
             ),
           ),
         ),

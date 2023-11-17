@@ -15,13 +15,25 @@ Future<String> get localPath async {
 
 Future<File> getLocalFile(String fileName) async {
   final path = await localPath;
-  return File('$path/$fileName.csv');
+  return File('$path/$fileName');
 }
 
 Future<File> writeContent(String fileName, String data) async {
   final file = await getLocalFile(fileName);
   // Write the file
   return file.writeAsString(data);
+}
+
+Future<void> deleteContent(String fileName) async {
+  String path = await localPath;
+  try {
+    final file = File('$path/$fileName');
+    await file.delete();
+  } catch (e) {
+    print(e);
+    rethrow;
+  }
+
 }
 
 Future<List<File>> get listOfFiles async {
