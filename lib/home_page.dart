@@ -20,16 +20,16 @@ class HomePage extends StatefulWidget {
 
 class ProcessedValues {
   final String timeStamp;
-  // final String lat;
-  // final String lon;
+  final String lat;
+  final String lon;
   final double avg;
   final double min;
   final double max;
 
   ProcessedValues({
     required this.timeStamp,
-    // required this.lat,
-    // required this.lon,
+    required this.lat,
+    required this.lon,
     required this.avg,
     required this.min,
     required this.max,
@@ -39,8 +39,8 @@ class ProcessedValues {
   Map<String, dynamic> toMap() {
     return {
       "timeStamp": timeStamp,
-      // "lat": lat.toString(),
-      // "lon": lon.toString(),
+      "lat": lat,
+      "lon": lon,
       "avg": avg,
       "min": min,
       "max": max,
@@ -133,6 +133,8 @@ class _HomePageState extends State<HomePage> {
 
       ProcessedValues processedValues = ProcessedValues(
         timeStamp: timeStamp,
+        lat: '0',
+        lon: '0',
         // lat: latitude,
         // lon: longitude,
         avg: averageDBA,
@@ -146,7 +148,6 @@ class _HomePageState extends State<HomePage> {
 
   // Function to process accumulated dBA values
   void processAccumulatedDBAValues() async {
-    print(DateTime.now().toString());
     int valuesToTake = (22.2 * selectedIntervalInSeconds).round();
     List<double> valuesToCalculate = accumulatedDBAValues.sublist(
         0, min(valuesToTake + 1, accumulatedDBAValues.length));
@@ -172,13 +173,14 @@ class _HomePageState extends State<HomePage> {
 
     ProcessedValues processedValues = ProcessedValues(
       timeStamp: timeStamp,
+      lat: '0',
+      lon: '0',
       // lat: latitude,
       // lon: longitude,
       avg: averageDBA,
       min: minDBA,
       max: maxDBA,
     );
-    print(DateTime.now().toString());
     dataList.add(processedValues);
   }
 
@@ -234,56 +236,53 @@ class _HomePageState extends State<HomePage> {
     }
     audio.addAll(buffer);
     audioDataQueue.add(buffer);
-    if (audioDataQueue.length >= 10) {
-      // Process 10 chunks of 19200 values
-      for (int i = 0; i < 10; i++) {
-        List<double> chunk = audioDataQueue.removeFirst();
-        List<List<double>> smallerArrays = [];
-        List<double> dBA_Arrays = [];
 
-        for (int j = 0; j < chunk.length; j += 1920) {
-          int end = j + 1920;
-          if (end > chunk.length) {
-            end = chunk.length;
-          }
-          smallerArrays.add(chunk.sublist(j, end));
-        }
-        for (List<double> smallerArray in smallerArrays) {
-          final fft = FFT(smallerArray.length);
-          final freq = fft.realFft(smallerArray);
-          List<double> dBAValues = [];
-
-          for (int j = 0; j < 960; j++) {
-            final double real = freq[j].x;
-            final double imaginary = freq[j].y;
-
-            // Precompute squared values
-            final Pi =
-                (2 * (sqrt((real * real + imaginary * imaginary) / 3686400)));
-            final dBi = 20 * log10(Pi);
-            // Calculate the magnitude value for the current frequency bin
-            final dBAvalue_i = dBi + 20 * log10(pow(2, 15)) + RaValues[j];
-            final dBAvalue = pow(10, ((dBAvalue_i) / 10));
-            dBAValues.add(dBAvalue as double);
-          }
-          // print(dBValues.sum);
-          final final_dBA = (10 * log10((dBAValues.sum)));
-          // print(final_dBA);
-          dBA_Arrays.add(final_dBA);
-        }
-
-        accumulatedDBAValues.addAll(dBA_Arrays);
-        // print(accumulatedDBAValues.length);
-        // Check if enough values are accumulated based on the selected interval
-        num requiredLength = ((selectedIntervalInSeconds * 1000) / 45).round();
-        // print(requiredLength);
-        if (accumulatedDBAValues.length >= requiredLength) {
-          // Call the function to process accumulated dBA values
-          processAccumulatedDBAValues();
-        }
-        dBA_Arrays = [];
+    List<double> chunk = audioDataQueue.removeFirst();
+    List<List<double>> smallerArrays = [];
+    List<double> dBA_Arrays = [];
+    int j = 0;
+    while (j < chunk.length) {
+      int end = j + 1920;
+      if (end > chunk.length) {
+        end = chunk.length;
       }
+      smallerArrays.add(chunk.sublist(j, end));
+      j = end;
     }
+
+    for (List<double> smallerArray in smallerArrays) {
+      final fft = FFT(smallerArray.length);
+      final freq = fft.realFft(smallerArray);
+      List<double> dBAValues = [];
+
+      for (int j = 0; j < 960; j++) {
+        final double real = freq[j].x;
+        final double imaginary = freq[j].y;
+
+        // Precompute squared values
+        final Pi =
+            (2 * (sqrt((real * real + imaginary * imaginary) / 3686400)));
+        final dBi = 20 * log10(Pi);
+        // Calculate the magnitude value for the current frequency bin
+        final dBAvalue_i = dBi + 20 * log10(pow(2, 15)) + RaValues[j];
+        final dBAvalue = pow(10, ((dBAvalue_i) / 10));
+        dBAValues.add(dBAvalue as double);
+      }
+      // print(dBValues.sum);
+      final final_dBA = (10 * log10((dBAValues.sum)));
+      // print(final_dBA);
+      dBA_Arrays.add(final_dBA);
+    }
+    accumulatedDBAValues.addAll(dBA_Arrays);
+    // Check if enough values are accumulated based on the selected interval
+    num requiredLength = ((selectedIntervalInSeconds * 1000) / 45).round();
+    // print(requiredLength);
+    if (accumulatedDBAValues.length >= requiredLength) {
+      // Call the function to process accumulated dBA values
+      processAccumulatedDBAValues();
+    }
+    dBA_Arrays = [];
+
     // Get the actual sampling rate, if not already known.
     sampleRate ??= await AudioStreamer().actualSampleRate;
     setState(() => latestBuffer = buffer);
