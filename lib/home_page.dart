@@ -11,20 +11,59 @@ import 'package:cupertino_icons/cupertino_icons.dart';
 import 'package:audio_streamer/audio_streamer.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:fftea/fftea.dart';
-import 'package:queue/queue.dart';
+import 'package:geolocator/geolocator.dart';
 
 class HomePage extends StatefulWidget {
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
+class ProcessedValues {
+  final String timeStamp;
+  // final String lat;
+  // final String lon;
+  final double avg;
+  final double min;
+  final double max;
+
+  ProcessedValues({
+    required this.timeStamp,
+    // required this.lat,
+    // required this.lon,
+    required this.avg,
+    required this.min,
+    required this.max,
+  });
+
+  // Method to convert ProcessedValues to a Map
+  Map<String, dynamic> toMap() {
+    return {
+      "timeStamp": timeStamp,
+      // "lat": lat.toString(),
+      // "lon": lon.toString(),
+      "avg": avg,
+      "min": min,
+      "max": max,
+    };
+  }
+
+  // Override toString to use the toMap method
+  @override
+  String toString() {
+    return toMap().toString();
+  }
+}
+
 class _HomePageState extends State<HomePage> {
+  //Global varible for data collection
+  List<dynamic> dataList = [];
   //Interval selections
   int selectedIntervalInSeconds = 1; // default interval is 1 second
   List<double> accumulatedDBAValues = [];
 
   int recordingTimerDuration = 0; // Duration in seconds
   List<double> RaValues = [];
+
   int? sampleRate;
   bool isRecording = false;
   List<double> audio = [];
@@ -41,34 +80,109 @@ class _HomePageState extends State<HomePage> {
     calculateRaValues();
   }
 
-  void checkAccumulatedArray() {
+  Future<bool> _handleLocationPermission() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Location services are disabled. Please enable the services')));
+      return false;
+    }
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location permissions are denied')));
+        return false;
+      }
+    }
+    if (permission == LocationPermission.deniedForever) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text(
+              'Location permissions are permanently denied, we cannot request permissions.')));
+      return false;
+    }
+    return true;
+  }
+
+  void checkAccumulatedArray() async {
     // Check if recording has stopped
     if (!isRecording && accumulatedDBAValues.isNotEmpty) {
       List<double> valuesToCalculate = accumulatedDBAValues;
       accumulatedDBAValues = [];
-      // Calculate average, min, max and print the values
-      final averageDBA = valuesToCalculate.sum / valuesToCalculate.length;
+      // Calculate the sum of dBA values
+      double sumOfDBA =
+          valuesToCalculate.fold(0, (acc, dBA) => acc + pow(10, dBA / 10));
+
+      // Calculate the average dBA
+      double averageDBA = 10 * log10(sumOfDBA / valuesToCalculate.length);
       final minDBA = valuesToCalculate.reduce(min);
       final maxDBA = valuesToCalculate.reduce(max);
-      print("Average dBA: $averageDBA, Min dBA: $minDBA, Max dBA: $maxDBA");
+      // final hasPermission = await _handleLocationPermission();
+      // if (!hasPermission) return;
+      // Position position = await Geolocator.getCurrentPosition(
+      //     desiredAccuracy: LocationAccuracy.low);
+
+      // var latitude = position.latitude.toString();
+      // var longitude = position.longitude.toString();
+      var timeStamp = (DateTime.now()).toString();
+
+      ProcessedValues processedValues = ProcessedValues(
+        timeStamp: timeStamp,
+        // lat: latitude,
+        // lon: longitude,
+        avg: averageDBA,
+        min: minDBA,
+        max: maxDBA,
+      );
+      dataList.add(processedValues);
+      print(dataList);
     }
   }
 
   // Function to process accumulated dBA values
-  void processAccumulatedDBAValues() {
-    int valuesToTake = 22 * selectedIntervalInSeconds;
-    List<double> valuesToCalculate =
-        accumulatedDBAValues.sublist(0, valuesToTake + 1);
-    accumulatedDBAValues = accumulatedDBAValues.sublist(valuesToTake + 1);
+  void processAccumulatedDBAValues() async {
+    print(DateTime.now().toString());
+    int valuesToTake = (22.2 * selectedIntervalInSeconds).round();
+    List<double> valuesToCalculate = accumulatedDBAValues.sublist(
+        0, min(valuesToTake + 1, accumulatedDBAValues.length));
+    accumulatedDBAValues = accumulatedDBAValues
+        .sublist(min(valuesToTake + 1, accumulatedDBAValues.length));
 
-    // Calculate average, min, max and print the values
-    final averageDBA = valuesToCalculate.sum / valuesToTake;
+    // Calculate the sum of dBA values
+    double sumOfDBA =
+        valuesToCalculate.fold(0, (acc, dBA) => acc + pow(10, dBA / 10));
+
+    // Calculate the average dBA
+    double averageDBA = 10 * log10(sumOfDBA / valuesToCalculate.length);
     final minDBA = valuesToCalculate.reduce(min);
     final maxDBA = valuesToCalculate.reduce(max);
+    var timeStamp = (DateTime.now()).toString();
+    // final hasPermission = await _handleLocationPermission();
+    // if (!hasPermission) return;
+    // Position position = await Geolocator.getCurrentPosition(
+    //     desiredAccuracy: LocationAccuracy.low);
 
-    print("Average dBA: $averageDBA, Min dBA: $minDBA, Max dBA: $maxDBA");
+    // var latitude = position.latitude.toString();
+    // var longitude = position.longitude.toString();
+
+    ProcessedValues processedValues = ProcessedValues(
+      timeStamp: timeStamp,
+      // lat: latitude,
+      // lon: longitude,
+      avg: averageDBA,
+      min: minDBA,
+      max: maxDBA,
+    );
+    print(DateTime.now().toString());
+    dataList.add(processedValues);
   }
 
+// Calculating Ra
   void calculateRaValues() {
     for (int i = 1; i <= 960; i++) {
       double freq = 22.97 * i;
@@ -390,7 +504,7 @@ class _HomePageState extends State<HomePage> {
           ),
           SizedBox(width: 10),
           FloatingActionButton(
-            child: Icon(Icons.repeat),
+            child: Icon(Icons.more_time),
             onPressed: () {
               _showIntervalPicker(context);
             },
