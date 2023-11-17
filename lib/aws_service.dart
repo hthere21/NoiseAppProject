@@ -1,3 +1,4 @@
+import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:flutter/material.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 // import 'package:flutter/foundation.dart';
@@ -8,6 +9,7 @@ import 'package:file_picker/file_picker.dart';
 
 import 'dart:io' as io;
 import 'package:aws_common/vm.dart';
+import 'local_storage.dart';
 
 class AwsS3Service {
   // Future<void> handleUpload(String key, String localFilePath) async {
@@ -39,6 +41,20 @@ class AwsS3Service {
 //     }
 //   }
 // }
+
+  Future<void> uploadCSVFile(io.File csvFile, String studyId) async {
+    final awsFile = AWSFilePlatform.fromFile(csvFile);
+    try {
+      final uploadResult = await Amplify.Storage.uploadFile(
+        localFile: awsFile, 
+        key: '$studyId/${csvFile.path.split('/').last}'
+      ).result;
+      safePrint('Uploaded file: ${uploadResult.uploadedItem.key}');
+    } on StorageException catch (e) {
+      safePrint('Error uploading file: ${e.message}');
+      rethrow;
+    }
+  }
 
   Future<void> uploadImage() async {
     // Select a file from the device
@@ -74,6 +90,18 @@ class AwsS3Service {
       rethrow;
     }
   }
+
+  Future<String> getUserId() async {
+    try {
+      final attributes = await Amplify.Auth.fetchUserAttributes();
+      // Represents the email as the userid
+      return attributes[2].value;
+    } catch (e) {
+      print("Error fetching user email: $e");
+      rethrow;
+    }
+  }
+
 }
 // Code from the aws flutter setup example below
 // Future<void> _configureAmplify() async {

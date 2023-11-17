@@ -12,7 +12,16 @@ import 'package:audio_streamer/audio_streamer.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:fftea/fftea.dart';
 import 'package:queue/queue.dart';
+import 'data_page.dart';
+import 'package:intl/intl.dart';
+import 'package:csv/csv.dart';
+import 'dart:io';
+import 'local_storage.dart';
+import 'package:path_provider/path_provider.dart';
+import 'aws_service.dart';
 
+
+const columnsForNoiseData = ['timeStamp', 'lat', 'lon', 'avg', 'min', 'max'];
 
 class HomePage extends StatefulWidget {
   @override
@@ -38,6 +47,39 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     calculateRaValues();
+  }
+
+  void exportCSV(String fileName, List<Map<String,dynamic>> noiseData) {
+    List<List<dynamic>> rows = [];
+    rows.add(columnsForNoiseData);
+
+    for (var data in noiseData) {
+      rows.add([data['timeStamp'], data['avg'], data['min'], data['max'], data['lat'], data['lon']]);
+    }
+
+    String csv = const ListToCsvConverter().convert(rows);
+    writeContent(fileName, csv);
+  }
+
+  void sendToDataPage() {
+    List<Map<String,dynamic>> TEMP_DATA = [
+      {"timeStamp": 123456, "lat": "14.97534313396318", 
+        "lon": "101.22998536005622", "avg": 123,
+        "min": 5.0, "max": 500},
+      {"timeStamp": 123556, "lat": "14.97534313396318", 
+      "lon": "101.22998536005622", "avg": 123,
+      "min": 5, "max": 500},
+    ];
+
+    String currTime = DateTime.now().toString();
+
+    exportCSV(currTime, TEMP_DATA);
+
+    setState(() {
+      
+      data.add(DataItem(data.length + 1, currTime, TEMP_DATA));
+    });
+
   }
 
   void calculateRaValues() {
@@ -78,6 +120,7 @@ class _HomePageState extends State<HomePage> {
         } else {
           timer.cancel();
           stop();
+          
         }
       });
     });
@@ -86,6 +129,7 @@ class _HomePageState extends State<HomePage> {
   /// Call-back on audio sample.
   void onAudio(List<double> buffer) async {
     if (recordingTimerDuration == 0) {
+      sendToDataPage();
       stop();
       return;
     }
