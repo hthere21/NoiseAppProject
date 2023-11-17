@@ -58,6 +58,7 @@ dependencies:
   file_picker: ^5.1.5
   wave: ^0.2.2
   location: ^5.0.3
+  geolocator: ^10.1.0
 
 dev_dependencies:
   flutter_test:
