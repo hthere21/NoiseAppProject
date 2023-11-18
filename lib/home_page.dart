@@ -19,6 +19,7 @@ import 'local_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'aws_service.dart';
 import 'package:geolocator/geolocator.dart';
+import 'main.dart';
 
 const columnsForNoiseData = ['timeStamp', 'lat', 'lon', 'avg', 'min', 'max'];
 
@@ -84,7 +85,6 @@ class _HomePageState extends State<HomePage> {
   StreamSubscription<List<double>>? audioSubscription;
   DateTime? recordingStartTime;
   // Checks if the data has already been loaded
-  bool prevDataLoaded = false;
 
   @override
   void initState() {

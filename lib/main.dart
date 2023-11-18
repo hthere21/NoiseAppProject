@@ -9,6 +9,9 @@ import 'package:amplify_flutter/amplify_flutter.dart';
 import 'amplifyconfiguration.dart';
 import 'package:amplify_storage_s3/amplify_storage_s3.dart';
 
+bool prevDataLoaded = false;
+
+
 Future<void> _configureAmplify() async {
   try {
     final auth = AmplifyAuthCognito();
