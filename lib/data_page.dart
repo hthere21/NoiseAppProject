@@ -12,8 +12,7 @@ List<DataItem> data = [
     DataItem(3, "Item 3", []),
   ];
 
-// Checks if the data has already been loaded
-bool prevDataLoaded = false;
+
 
 const List<DataColumn> COLUMNS = [
   DataColumn(
@@ -88,41 +87,9 @@ class _DataStoragePageState extends State<DataStoragePage> {
   @override
   void initState() {
     super.initState();
-    loadAllPreviousData();
   }
 
-  void loadAllPreviousData() async {
-    if (prevDataLoaded)
-    {
-      return;
-    } 
-    List<File> files = await listOfFiles;
-
-
-    for (File file in files) {
-      if (file.path.split('/').last.contains(".csv"))
-      {
-        print(file);
-        List<List<dynamic>> content = await readContent(file);
-        List<dynamic> columnNames = content.removeAt(0); 
-        List<dynamic> tempData = [];
-
-
-        for (var row in content) { 
-          tempData.add(Map.fromIterables(columnNames, row));
-        }
-
-        DataItem item = DataItem(data.length + 1, file.path.split('/').last, tempData);
-        data.add(item);
-      }
-      
-    }
-
-    setState(() {
-      prevDataLoaded = true;
-    });
-
-  }
+  
 
   void handleRowPress(DataItem item) {
     setState(() {

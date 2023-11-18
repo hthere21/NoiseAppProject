@@ -20,7 +20,6 @@ import 'package:path_provider/path_provider.dart';
 import 'aws_service.dart';
 import 'package:geolocator/geolocator.dart';
 
-
 const columnsForNoiseData = ['timeStamp', 'lat', 'lon', 'avg', 'min', 'max'];
 
 class HomePage extends StatefulWidget {
@@ -84,11 +83,43 @@ class _HomePageState extends State<HomePage> {
   final audioDataQueue = ListQueue<List<double>>();
   StreamSubscription<List<double>>? audioSubscription;
   DateTime? recordingStartTime;
+  // Checks if the data has already been loaded
+  bool prevDataLoaded = false;
 
   @override
   void initState() {
     super.initState();
+    loadAllPreviousData();
+
     calculateRaValues();
+  }
+
+  void loadAllPreviousData() async {
+    if (prevDataLoaded) {
+      return;
+    }
+    List<File> files = await listOfFiles;
+
+    for (File file in files) {
+      if (file.path.split('/').last.contains(".csv")) {
+        print(file);
+        List<List<dynamic>> content = await readContent(file);
+        List<dynamic> columnNames = content.removeAt(0);
+        List<dynamic> tempData = [];
+
+        for (var row in content) {
+          tempData.add(Map.fromIterables(columnNames, row));
+        }
+
+        DataItem item =
+            DataItem(data.length + 1, file.path.split('/').last, tempData);
+        data.add(item);
+      }
+    }
+
+    setState(() {
+      prevDataLoaded = true;
+    });
   }
 
   void exportCSV(String fileName, List<dynamic> noiseData) {
@@ -96,7 +127,14 @@ class _HomePageState extends State<HomePage> {
     rows.add(columnsForNoiseData);
 
     for (var data in noiseData) {
-      rows.add([data['timeStamp'], data['avg'], data['min'], data['max'], data['lat'], data['lon']]);
+      rows.add([
+        data['timeStamp'],
+        data['lat'],
+        data['lon'],
+        data['avg'],
+        data['min'],
+        data['max']
+      ]);
     }
 
     String csv = const ListToCsvConverter().convert(rows);
@@ -104,24 +142,17 @@ class _HomePageState extends State<HomePage> {
   }
 
   void sendToDataPage() {
-    // List<Map<String,dynamic>> TEMP_DATA = [
-    //   {"timeStamp": 2000000, "lat": "144234.97534313396318", 
-    //     "lon": "101234234.22998536005622", "avg": 500,
-    //     "min": 30, "max": 30},
-    //   {"timeStamp": 2000000, "lat": "1432423.97534313396318", 
-    //   "lon": "10324321.22998536005622", "avg": 500,
-    //   "min": 30, "max": 30},
-    // ];
-
     String fileName = '${DateTime.now().toString()}.csv';
+    List<dynamic> newArray = [];
+    for (ProcessedValues newData in dataList) {
+      newArray.add(newData.toMap());
+    }
 
-    exportCSV(fileName, dataList);
+    exportCSV(fileName, newArray);
 
     setState(() {
-      
-      data.add(DataItem(data.length + 1, fileName, dataList));
+      data.add(DataItem(data.length + 1, fileName, newArray));
     });
-
   }
 
   void reset() {
@@ -230,7 +261,6 @@ class _HomePageState extends State<HomePage> {
     dataList.add(processedValues);
   }
 
-
   void calculateRaValues() {
     for (int i = 1; i <= 960; i++) {
       double freq = 22.97 * i;
@@ -270,7 +300,6 @@ class _HomePageState extends State<HomePage> {
         } else {
           timer.cancel();
           stop();
-          
         }
       });
     });
