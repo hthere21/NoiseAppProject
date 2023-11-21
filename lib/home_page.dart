@@ -308,7 +308,6 @@ class _HomePageState extends State<HomePage> {
   /// Call-back on audio sample.
   void onAudio(List<double> buffer) async {
     if (recordingTimerDuration == 0) {
-      sendToDataPage();
       stop();
       return;
     }

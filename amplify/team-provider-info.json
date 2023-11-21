@@ -11,6 +11,20 @@
       "StackId": "arn:aws:cloudformation:us-west-1:745725956821:stack/amplify-flutternoiseapp117-dev-131039/3a33e890-7b4e-11ee-b3c7-066c6f712ea7",
       "AmplifyAppId": "d1s4kvwzzu0ew0",
       "AuthTriggerTemplateURL": "https://s3.amazonaws.com/amplify-flutternoiseapp117-dev-131039-deployment/amplify-cfn-templates/auth/auth-trigger-cloudformation-template.json"
+    },
+    "categories": {
+      "auth": {
+        "flutternoiseapp1173af34b933af34b93": {}
+      },
+      "function": {
+        "flutternoiseapp1173af34b933af34b93PreSignup": {
+          "deploymentBucketName": "amplify-flutternoiseapp117-dev-131039-deployment",
+          "s3Key": "amplify-builds/flutternoiseapp1173af34b933af34b93PreSignup-456c7472306d49416255-build.zip"
+        }
+      },
+      "storage": {
+        "Uploads": {}
+      }
     }
   }
 }

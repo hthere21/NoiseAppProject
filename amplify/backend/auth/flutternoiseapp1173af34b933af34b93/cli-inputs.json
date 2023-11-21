@@ -1,0 +1,58 @@
+{
+  "version": "1",
+  "cognitoConfig": {
+    "identityPoolName": "flutternoiseapp1173af34b93_identitypool_3af34b93",
+    "allowUnauthenticatedIdentities": false,
+    "resourceNameTruncated": "flutte3af34b93",
+    "userPoolName": "flutternoiseapp1173af34b93_userpool_3af34b93",
+    "autoVerifiedAttributes": [
+      "email"
+    ],
+    "mfaConfiguration": "OFF",
+    "mfaTypes": [
+      "SMS Text Message"
+    ],
+    "smsAuthenticationMessage": "Your authentication code is {####}",
+    "smsVerificationMessage": "Your verification code is {####}",
+    "emailVerificationSubject": "Your verification code",
+    "emailVerificationMessage": "Your verification code is {####}",
+    "defaultPasswordPolicy": false,
+    "passwordPolicyMinLength": 8,
+    "passwordPolicyCharacters": [],
+    "requiredAttributes": [
+      "email"
+    ],
+    "aliasAttributes": [],
+    "userpoolClientGenerateSecret": false,
+    "userpoolClientRefreshTokenValidity": "30",
+    "userpoolClientWriteAttributes": [
+      "email"
+    ],
+    "userpoolClientReadAttributes": [
+      "email"
+    ],
+    "userpoolClientLambdaRole": "flutte3af34b93_userpoolclient_lambda_role",
+    "userpoolClientSetAttributes": false,
+    "sharedId": "3af34b93",
+    "resourceName": "flutternoiseapp1173af34b933af34b93",
+    "authSelections": "identityPoolAndUserPool",
+    "useDefault": "manual",
+    "thirdPartyAuth": true,
+    "authProviders": [],
+    "usernameAttributes": [
+      "email"
+    ],
+    "userPoolGroups": false,
+    "adminQueries": false,
+    "triggers": {
+      "PreSignup": [
+        "custom"
+      ]
+    },
+    "hostedUI": false,
+    "userPoolGroupList": [],
+    "serviceName": "Cognito",
+    "usernameCaseSensitive": false,
+    "useEnabledMfas": true
+  }
+}
