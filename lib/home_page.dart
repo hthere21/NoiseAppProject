@@ -20,7 +20,7 @@ import 'package:path_provider/path_provider.dart';
 import 'aws_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'main.dart';
-
+import 'aws_service.dart';
 const columnsForNoiseData = ['timeStamp', 'lat', 'lon', 'avg', 'min', 'max'];
 
 class HomePage extends StatefulWidget {
@@ -89,12 +89,23 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    loadCache();
     loadAllPreviousData();
-
     calculateRaValues();
   }
 
+  void loadCache() async {
+    if (cacheLoaded) {
+      print(cache);
+      return;
+    }
+    cache = await readCacheOfUser();
+    cacheLoaded = true;
+  }
+
   void loadAllPreviousData() async {
+    print(await AwsS3Service().getUserId());
+
     if (prevDataLoaded) {
       return;
     }
@@ -229,6 +240,7 @@ class _HomePageState extends State<HomePage> {
       sendToDataPage();
       ////////////////
     }
+    sendToDataPage();
   }
 
   // Function to process accumulated dBA values

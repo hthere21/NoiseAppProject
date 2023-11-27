@@ -10,6 +10,10 @@ import 'amplifyconfiguration.dart';
 import 'package:amplify_storage_s3/amplify_storage_s3.dart';
 
 bool prevDataLoaded = false;
+bool cacheLoaded = false;
+Map<String, dynamic> cache = {};
+String studyId = "UNDEFINED";
+
 
 
 Future<void> _configureAmplify() async {
@@ -45,11 +49,20 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-  } 
+  }
+
 
   @override
   Widget build(BuildContext context) {
     return Authenticator(
+      signUpForm: SignUpForm.custom(
+      fields: [
+        SignUpFormField.username(),
+        SignUpFormField.password(),
+        SignUpFormField.passwordConfirmation(),
+        SignUpFormField.name(),
+        SignUpFormField.familyName()
+      ]),
       authenticatorBuilder: (BuildContext context, AuthenticatorState state) {
         switch (state.currentStep) {
           case AuthenticatorStep.confirmSignUp:

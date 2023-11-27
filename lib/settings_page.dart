@@ -2,9 +2,8 @@ import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_authenticator/amplify_authenticator.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_noise_app_117/local_storage.dart';
 import 'main.dart';
-
-String studyId = "UNDEFINED";
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -58,7 +57,8 @@ class _SettingsPageState extends State<SettingsPage> {
                   setState(() {
                     studyId = studyIdController.text;
                   });
-                    FocusScope.of(context).unfocus();
+                  writeCacheOfUser("studyId", studyId);
+                  FocusScope.of(context).unfocus();
                 }, 
                 child: const Text("Save")
               ),

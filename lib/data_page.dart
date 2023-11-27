@@ -1,9 +1,12 @@
+import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_noise_app_117/settings_page.dart';
+import 'package:get/get.dart';
 import 'aws_service.dart'; // Import the AWS service file
 import 'package:path_provider/path_provider.dart';
 import 'local_storage.dart';
 import 'dart:io';
+import 'main.dart';
 
 // All rows of data to be shown. Keeps track of any additions of recordings 
 List<DataItem> data = [
@@ -83,6 +86,8 @@ class DataItem {
 class _DataStoragePageState extends State<DataStoragePage> {
   DataItem? selectedItem;
   String editedTitle = "";
+  List<bool> selectedItems = List.generate(data.length, (index) => false);
+
 
   @override
   void initState() {
@@ -243,10 +248,17 @@ class _DataStoragePageState extends State<DataStoragePage> {
     // }
   }
 
-  void handleDelete() {
+  void handleDelete() async {
     if (selectedItem != null) {
-      data.removeWhere((item) => item.id == selectedItem!.id);
-      handleClosePopup();
+      String fileName = selectedItem!.title;
+      deleteContent(fileName);
+      deleteCacheOfUserUpload(fileName);
+      setState(() {
+        cache.removeWhere((key, value) => key == fileName);
+        data.removeWhere((item) => item.id == selectedItem!.id);
+      });
+
+      Navigator.of(context).pop();
     }
   }
   void _showUploadConfirmation(BuildContext context) {
@@ -302,8 +314,20 @@ class _DataStoragePageState extends State<DataStoragePage> {
     // awsService.uploadImage();
     String fileName = selectedItem!.title;
     File csvFile = await getLocalFile(fileName);
+    setState(() {
+      cache[fileName] = true;
+    });
+    
     awsService.uploadCSVFile(csvFile, studyId);
+    writeCacheOfUserUpload(fileName);
 
+  }
+
+  String checkUploaded(String fileName) {
+    if (cache.containsKey(fileName)) {
+      return fileName + " ( UPLOADED )";
+    }
+    return fileName;
   }
 
   @override
@@ -317,8 +341,16 @@ class _DataStoragePageState extends State<DataStoragePage> {
         itemBuilder: (context, index) {
           final item = data[index];
           return ListTile(
-            title: Text(item.title),
+            title: Text(checkUploaded(item.title)),
             onTap: () => handleRowPress(item),
+            trailing: Checkbox(
+              value: selectedItems[index],
+              onChanged: (bool? value) {
+                setState(() {
+                  selectedItems[index] = value!;
+                });
+              },
+            ),
           );
         },
       ),
