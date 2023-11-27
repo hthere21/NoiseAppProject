@@ -5,14 +5,12 @@ import 'package:path_provider/path_provider.dart';
 import 'local_storage.dart';
 import 'dart:io';
 
-// All rows of data to be shown. Keeps track of any additions of recordings 
+// All rows of data to be shown. Keeps track of any additions of recordings
 List<DataItem> data = [
-    DataItem(1, "Item 1", []),
-    DataItem(2, "Item 2", []),
-    DataItem(3, "Item 3", []),
-  ];
-
-
+  DataItem(1, "Item 1", []),
+  DataItem(2, "Item 2", []),
+  DataItem(3, "Item 3", []),
+];
 
 const List<DataColumn> COLUMNS = [
   DataColumn(
@@ -22,7 +20,6 @@ const List<DataColumn> COLUMNS = [
         style: TextStyle(fontStyle: FontStyle.italic),
       ),
     ),
-    
   ),
   DataColumn(
     label: Expanded(
@@ -79,7 +76,6 @@ class DataItem {
   DataItem(this.id, this.title, this.data);
 }
 
-
 class _DataStoragePageState extends State<DataStoragePage> {
   DataItem? selectedItem;
   String editedTitle = "";
@@ -88,8 +84,6 @@ class _DataStoragePageState extends State<DataStoragePage> {
   void initState() {
     super.initState();
   }
-
-  
 
   void handleRowPress(DataItem item) {
     setState(() {
@@ -113,47 +107,47 @@ class _DataStoragePageState extends State<DataStoragePage> {
                 },
               ),
               SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: <Widget>[
-                  ElevatedButton(
-                    onPressed: handleEditTitle,
-                    child: const Text('Save'),
-                  ),
-                  ElevatedButton(
-                    onPressed: handleDelete,
-                    child: const Text('Delete'), // Add Delete button
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      try {
-                        handleUpload();
-                        _showUploadConfirmation(context);
-                      }
-                      catch (e) {
-                        print(e);
-                        _showUploadFailure(context);
-                      }
-                      
-                    },
-                    child: const Text('Upload'), // Add Upload button
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return handleView();
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: <Widget>[
+                    ElevatedButton(
+                      onPressed: handleEditTitle,
+                      child: const Text('Save'),
+                    ),
+                    ElevatedButton(
+                      onPressed: handleDelete,
+                      child: const Text('Delete'), // Add Delete button
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        try {
+                          handleUpload();
+                          _showUploadConfirmation(context);
+                        } catch (e) {
+                          print(e);
+                          _showUploadFailure(context);
+                        }
+                      },
+                      child: const Text('Upload'), // Add Upload button
+                    ),
+                    ElevatedButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) {
+                              return handleView();
+                            },
+                          );
                         },
-                      );
-                    },
-                    child: const Text('View')
-                  ),
-                  ElevatedButton(
-                    onPressed: handleClosePopup,
-                    child: const Text('Cancel'),
-                  ),
-                ],
+                        child: const Text('View')),
+                    ElevatedButton(
+                      onPressed: handleClosePopup,
+                      child: const Text('Cancel'),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -168,16 +162,14 @@ class _DataStoragePageState extends State<DataStoragePage> {
     DataItem item = data[index];
     List<dynamic> itemData = item.data;
     for (Map<dynamic, dynamic> row in itemData) {
-      DataRow dataRow = DataRow(cells:
-          <DataCell>[
-            DataCell(Text(row['timeStamp'].toString())),
-            DataCell(Text(row['avg'].toString())),
-            DataCell(Text(row['min'].toString())),
-            DataCell(Text(row['max'].toString())),
-            DataCell(Text(row['lat'].toString())),
-            DataCell(Text(row['lon'].toString())),
-          ]
-      );
+      DataRow dataRow = DataRow(cells: <DataCell>[
+        DataCell(Text(row['timeStamp'].toString())),
+        DataCell(Text(row['avg'].toString())),
+        DataCell(Text(row['min'].toString())),
+        DataCell(Text(row['max'].toString())),
+        DataCell(Text(row['lat'].toString())),
+        DataCell(Text(row['lon'].toString())),
+      ]);
       rows.add(dataRow);
     }
 
@@ -216,30 +208,26 @@ class _DataStoragePageState extends State<DataStoragePage> {
 
   AlertDialog handleView() {
     // if (selectedItem != null) {
-      List<DataRow> rows = _createTableRows(selectedItem!.id - 1);
-      // List<Map<String,dynamic>> transposedData = _prepTableRows(selectedItem!.id - 1);
-      return AlertDialog(
-        content: Container(
+    List<DataRow> rows = _createTableRows(selectedItem!.id - 1);
+    // List<Map<String,dynamic>> transposedData = _prepTableRows(selectedItem!.id - 1);
+    return AlertDialog(
+      content: Container(
           width: 300.0,
           height: 400.0,
           child: SingleChildScrollView(
             scrollDirection: Axis.vertical,
             child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                columns: COLUMNS,
-                rows: rows
-              )
-            ),
-          )
-        ),
-        actions: [
-            ElevatedButton(onPressed: () {
+                scrollDirection: Axis.horizontal,
+                child: DataTable(columns: COLUMNS, rows: rows)),
+          )),
+      actions: [
+        ElevatedButton(
+            onPressed: () {
               Navigator.of(context).pop();
-            }, 
+            },
             child: const Text('Close'))
-          ],
-      );
+      ],
+    );
     // }
   }
 
@@ -249,6 +237,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
       handleClosePopup();
     }
   }
+
   void _showUploadConfirmation(BuildContext context) {
     showDialog(
       context: context,
@@ -269,7 +258,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
       },
     );
   }
-  
+
   void _showUploadFailure(BuildContext context) {
     showDialog(
       context: context,
@@ -290,6 +279,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
       },
     );
   }
+
   // void handleUpload() {
   //   // // Call the AWS service to handle the upload
   //   // final awsService = AwsService();
@@ -303,7 +293,6 @@ class _DataStoragePageState extends State<DataStoragePage> {
     String fileName = selectedItem!.title;
     File csvFile = await getLocalFile(fileName);
     awsService.uploadCSVFile(csvFile, studyId);
-
   }
 
   @override

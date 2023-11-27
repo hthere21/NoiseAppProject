@@ -30,9 +30,6 @@ Future<void> main() async {
   await _configureAmplify();
   runApp(MyApp());
 }
-// void main() {
-//   runApp(MyApp());
-// }
 
 class MyApp extends StatefulWidget {
   const MyApp({Key? key}) : super(key: key);

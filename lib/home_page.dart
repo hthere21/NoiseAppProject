@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cupertino_icons/cupertino_icons.dart';
 import 'package:audio_streamer/audio_streamer.dart';
+import 'package:flutter_noise_app_117/sound_wave_animation.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:fftea/fftea.dart';
 import 'package:queue/queue.dart';
@@ -65,6 +66,9 @@ class ProcessedValues {
 }
 
 class _HomePageState extends State<HomePage> {
+  //Long and Lat global variables:
+  double latitude = 0.0;
+  double longitude = 0.0;
   //Global varible for data collection
   List<dynamic> dataList = [];
   //Interval selections
@@ -92,6 +96,55 @@ class _HomePageState extends State<HomePage> {
     loadAllPreviousData();
 
     calculateRaValues();
+    // Start fetching geolocation every 30 seconds
+    Timer.periodic(Duration(seconds: 5), (timer) {
+      getCurrentLocation();
+    });
+  }
+
+  @override
+  void dispose() {
+    countdownTimer?.cancel();
+    audioSubscription?.cancel();
+    // Dispose of other resources like controllers
+    super.dispose();
+  }
+
+// Get current geolocation
+  void getCurrentLocation() async {
+    try {
+      // Check if location services are enabled
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        // Handle case where location services are disabled
+        print('Location services are disabled.');
+        return;
+      }
+      // Check and request location permission
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          // Handle case where location permission is denied
+          print('Location permission is denied.');
+          return;
+        }
+      }
+
+      // Get current position
+      Position position = await Geolocator.getCurrentPosition(
+          desiredAccuracy: LocationAccuracy.high);
+
+      if (mounted) {
+        setState(() {
+          latitude = position.latitude;
+          longitude = position.longitude;
+        });
+      }
+    } catch (e) {
+      // Handle other location-related errors
+      print("Error getting location: $e");
+    }
   }
 
   void loadAllPreviousData() async {
@@ -102,7 +155,6 @@ class _HomePageState extends State<HomePage> {
 
     for (File file in files) {
       if (file.path.split('/').last.contains(".csv")) {
-        print(file);
         List<List<dynamic>> content = await readContent(file);
         List<dynamic> columnNames = content.removeAt(0);
         List<dynamic> tempData = [];
@@ -167,36 +219,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  //Permission for the geolocation
-  // Future<bool> _handleLocationPermission() async {
-  //   bool serviceEnabled;
-  //   LocationPermission permission;
-
-  //   serviceEnabled = await Geolocator.isLocationServiceEnabled();
-  //   if (!serviceEnabled) {
-  //     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-  //         content: Text(
-  //             'Location services are disabled. Please enable the services')));
-  //     return false;
-  //   }
-  //   permission = await Geolocator.checkPermission();
-  //   if (permission == LocationPermission.denied) {
-  //     permission = await Geolocator.requestPermission();
-  //     if (permission == LocationPermission.denied) {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //           const SnackBar(content: Text('Location permissions are denied')));
-  //       return false;
-  //     }
-  //   }
-  //   if (permission == LocationPermission.deniedForever) {
-  //     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-  //         content: Text(
-  //             'Location permissions are permanently denied, we cannot request permissions.')));
-  //     return false;
-  //   }
-  //   return true;
-  // }
-
   void checkAccumulatedArray() async {
     // Check if recording has stopped
     if (!isRecording && accumulatedDBAValues.isNotEmpty) {
@@ -208,22 +230,26 @@ class _HomePageState extends State<HomePage> {
 
       // Calculate the average dBA
       double averageDBA = 10 * log10(sumOfDBA / valuesToCalculate.length);
-      final minDBA = valuesToCalculate.reduce(min);
-      final maxDBA = valuesToCalculate.reduce(max);
+      double minDBA = valuesToCalculate.reduce(min);
+      double maxDBA = valuesToCalculate.reduce(max);
+
+      // Round to the second decimal place
+      averageDBA = double.parse(averageDBA.toStringAsFixed(2));
+      minDBA = double.parse(minDBA.toStringAsFixed(2));
+      maxDBA = double.parse(maxDBA.toStringAsFixed(2));
       var timeStamp = (DateTime.now()).toString();
 
       ProcessedValues processedValues = ProcessedValues(
         timeStamp: timeStamp,
-        lat: '0',
-        lon: '0',
-        // lat: latitude,
-        // lon: longitude,
+        // lat: '0',
+        // lon: '0',
+        lat: latitude.toString(),
+        lon: longitude.toString(),
         avg: averageDBA,
         min: minDBA,
         max: maxDBA,
       );
       dataList.add(processedValues);
-      print(dataList);
 
       //Send data page
       sendToDataPage();
@@ -244,16 +270,20 @@ class _HomePageState extends State<HomePage> {
 
     // Calculate the average dBA
     double averageDBA = 10 * log10(sumOfDBA / valuesToCalculate.length);
-    final minDBA = valuesToCalculate.reduce(min);
-    final maxDBA = valuesToCalculate.reduce(max);
+    double minDBA = valuesToCalculate.reduce(min);
+    double maxDBA = valuesToCalculate.reduce(max);
+
+    averageDBA = double.parse(averageDBA.toStringAsFixed(2));
+    minDBA = double.parse(minDBA.toStringAsFixed(2));
+    maxDBA = double.parse(maxDBA.toStringAsFixed(2));
     var timeStamp = (DateTime.now()).toString();
 
     ProcessedValues processedValues = ProcessedValues(
       timeStamp: timeStamp,
-      lat: '0',
-      lon: '0',
-      // lat: latitude,
-      // lon: longitude,
+      // lat: '0',
+      // lon: '0',
+      lat: latitude.toString(),
+      lon: longitude.toString(),
       avg: averageDBA,
       min: minDBA,
       max: maxDBA,
@@ -528,6 +558,9 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+            // Conditionally include SoundWaveAnimation when recording
+            SoundWaveAnimation(isRecording: isRecording),
+
             Container(
               margin: EdgeInsets.all(25),
               child: Column(
@@ -552,6 +585,11 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                   ),
+                  SizedBox(height: 5),
+                  Text(
+                    'Interval Selection: ${selectedIntervalInSeconds} seconds',
+                    style: TextStyle(fontSize: 18, color: Colors.black),
+                  ),
                   Container(
                     margin: EdgeInsets.all(20),
                     child: Text(
@@ -559,17 +597,8 @@ class _HomePageState extends State<HomePage> {
                       style: TextStyle(fontSize: 25, color: Colors.blue),
                     ),
                   ),
-                  Text('Max amp: ${latestBuffer?.reduce(max)}'),
-                  Text('Min amp: ${latestBuffer?.reduce(min)}'),
                 ],
               ),
-            ),
-            SizedBox(
-                height:
-                    20), // Add space between the time duration and interval selection
-            Text(
-              'Interval Selection: ${selectedIntervalInSeconds} seconds',
-              style: TextStyle(fontSize: 18, color: Colors.black),
             ),
           ],
         ),
@@ -580,7 +609,18 @@ class _HomePageState extends State<HomePage> {
           FloatingActionButton(
             backgroundColor: isRecording ? Colors.red : Colors.green,
             child: isRecording ? Icon(Icons.stop) : Icon(Icons.mic),
-            onPressed: isRecording ? stop : start,
+            onPressed: () {
+              setState(() {
+                isRecording = !isRecording;
+              });
+
+              // Start or stop recording based on the current state
+              if (isRecording) {
+                start();
+              } else {
+                stop();
+              }
+            },
           ),
           SizedBox(width: 10),
           FloatingActionButton(

@@ -9,7 +9,7 @@ import 'package:path_provider/path_provider.dart';
 
 Future<String> get localPath async {
   final directory = await getApplicationDocumentsDirectory();
-  print(directory.path);
+  // print(directory.path);
   return directory.path;
 }
 
@@ -48,7 +48,7 @@ Future<List<File>> get listOfFiles async {
 
   }
 
-  print(files);
+  // print(files);
 
   return files;
 
