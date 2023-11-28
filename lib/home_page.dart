@@ -164,7 +164,7 @@ class _HomePageState extends State<HomePage> {
     cacheLoaded = true;
     studyId = cache['studyId'];
   }
-  
+
 
   void loadAllPreviousData() async {
     if (prevDataLoaded) {
@@ -273,7 +273,7 @@ class _HomePageState extends State<HomePage> {
       sendToDataPage();
       ////////////////
     }
-    sendToDataPage(); // FOR TESTING ON ANDROID
+    // sendToDataPage(); // FOR TESTING ON ANDROID
   }
 
   // Function to process accumulated dBA values
