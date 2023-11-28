@@ -94,7 +94,31 @@ class _DataStoragePageState extends State<DataStoragePage> {
     super.initState();
   }
 
-  
+  // void handleMultipleRows() {
+  //   showModalBottomSheet(context: context, builder: (context) {
+  //     return Container(
+  //       padding: EdgeInsets.all(16),
+  //         child: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: <Widget>[
+  //             const Text(
+  //               ,
+  //             ),
+  //             SizedBox(height: 16),
+  //             Row(
+  //               mainAxisAlignment: MainAxisAlignment.spaceAround,
+  //               children: <Widget>[
+  //                 ElevatedButton(
+  //                   onPressed: handleEditTitle,
+  //                   child: const Text('Save'),
+  //                 ),
+  //               ]
+  //             )
+  //           ],
+          
+  //     );
+  //   });
+  // }
 
   void handleRowPress(DataItem item) {
     setState(() {
@@ -126,7 +150,17 @@ class _DataStoragePageState extends State<DataStoragePage> {
                     child: const Text('Save'),
                   ),
                   ElevatedButton(
-                    onPressed: handleDelete,
+                    onPressed: () {
+                      try {
+                        handleDelete();
+                        _showDeletionConfirmation(context);
+                      }
+                      catch (e) {
+                        print(e);
+                        _showDeletionFailure(context);
+                      }
+                      
+                    },
                     child: const Text('Delete'), // Add Delete button
                   ),
                   ElevatedButton(
@@ -251,8 +285,11 @@ class _DataStoragePageState extends State<DataStoragePage> {
   void handleDelete() async {
     if (selectedItem != null) {
       String fileName = selectedItem!.title;
-      deleteContent(fileName);
+
       deleteCacheOfUserUpload(fileName);
+      deleteContent(fileName);
+      
+
       setState(() {
         cache.removeWhere((key, value) => key == fileName);
         data.removeWhere((item) => item.id == selectedItem!.id);
@@ -261,6 +298,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
       Navigator.of(context).pop();
     }
   }
+
   void _showUploadConfirmation(BuildContext context) {
     showDialog(
       context: context,
@@ -296,6 +334,48 @@ class _DataStoragePageState extends State<DataStoragePage> {
                 Navigator.of(context).pop();
               },
               child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDeletionConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Deletion Success'),
+          content: const Text('Deleted file successfully!'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                // Close the AlertDialog
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showDeletionFailure(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Deletion Fail'),
+          content: const Text('Failed to delete file...'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                // Close the AlertDialog
+                Navigator.of(context).pop();
+              },
+              child: const Text('OK'),
             ),
           ],
         );

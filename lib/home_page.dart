@@ -225,8 +225,8 @@ class _HomePageState extends State<HomePage> {
 
       ProcessedValues processedValues = ProcessedValues(
         timeStamp: timeStamp,
-        lat: '0',
-        lon: '0',
+        lat: '0.0',
+        lon: '0.0',
         // lat: latitude,
         // lon: longitude,
         avg: averageDBA,
@@ -262,8 +262,8 @@ class _HomePageState extends State<HomePage> {
 
     ProcessedValues processedValues = ProcessedValues(
       timeStamp: timeStamp,
-      lat: '0',
-      lon: '0',
+      lat: '0.0',
+      lon: '0.0',
       // lat: latitude,
       // lon: longitude,
       avg: averageDBA,
