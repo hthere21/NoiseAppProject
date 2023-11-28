@@ -2,9 +2,8 @@ import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_authenticator/amplify_authenticator.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_noise_app_117/local_storage.dart';
 import 'main.dart';
-
-String studyId = "UNDEFINED";
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({Key? key}) : super(key: key);
@@ -36,6 +35,27 @@ class _SettingsPageState extends State<SettingsPage> {
     super.dispose();
   }
 
+  void _showSaveConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Save Confirmed'),
+          content: const Text('Successfully Changed StudyId!'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                // Close the AlertDialog
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,10 +75,13 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               ElevatedButton(
                 onPressed: () { 
+                  writeCacheOfUser("studyId", studyId);
                   setState(() {
                     studyId = studyIdController.text;
+                    cache['studyId'] = studyId;
                   });
-                    FocusScope.of(context).unfocus();
+                  FocusScope.of(context).unfocus();
+                  _showSaveConfirmation(context);
                 }, 
                 child: const Text("Save")
               ),

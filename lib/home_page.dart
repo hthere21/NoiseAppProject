@@ -21,7 +21,7 @@ import 'package:path_provider/path_provider.dart';
 import 'aws_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'main.dart';
-
+import 'aws_service.dart';
 const columnsForNoiseData = ['timeStamp', 'lat', 'lon', 'avg', 'min', 'max'];
 
 class HomePage extends StatefulWidget {
@@ -92,9 +92,11 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    
     super.initState();
+    
+    loadCache();
     loadAllPreviousData();
-
     calculateRaValues();
     // Start fetching geolocation every 30 seconds
     Timer.periodic(Duration(seconds: 5), (timer) {
@@ -147,6 +149,23 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void loadCache() async {
+    if (cacheLoaded) {
+      // final path = await getLocalFile(cacheFileName);
+      // if (path.existsSync())
+      // {
+      //   print("hello");
+      // }
+      // print(path.toString());
+      print(cache);
+      return;
+    }
+    cache = await readCacheOfUser();
+    cacheLoaded = true;
+    studyId = cache['studyId'];
+  }
+  
+
   void loadAllPreviousData() async {
     if (prevDataLoaded) {
       return;
@@ -169,9 +188,8 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    setState(() {
-      prevDataLoaded = true;
-    });
+    prevDataLoaded = true;
+    
   }
 
   void exportCSV(String fileName, List<dynamic> noiseData) {
@@ -255,6 +273,7 @@ class _HomePageState extends State<HomePage> {
       sendToDataPage();
       ////////////////
     }
+    sendToDataPage(); // FOR TESTING ON ANDROID
   }
 
   // Function to process accumulated dBA values

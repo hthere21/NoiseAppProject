@@ -48,7 +48,7 @@ class AwsS3Service {
     try {
       final uploadResult = await Amplify.Storage.uploadFile(
         localFile: awsFile, 
-        key: '$studyId/$userId/${csvFile.path.split('/').last}'
+        key: 'studyid=$studyId/userid=$userId/${csvFile.path.split('/').last}'
       ).result;
       safePrint('Uploaded file: ${uploadResult.uploadedItem.key}');
     } on StorageException catch (e) {
@@ -96,14 +96,22 @@ class AwsS3Service {
     try {
       final attributes = await Amplify.Auth.fetchUserAttributes();
       // Represents the email as the userid
-      return attributes[2].value;
+      String userid = "";
+      for (AuthUserAttribute a in attributes)
+      {
+        if (a.userAttributeKey.key == 'email')
+        {
+          userid = a.value;
+        }
+      }
+      return userid;
     } catch (e) {
       print("Error fetching user email: $e");
       rethrow;
     }
   }
-
 }
+
 // Code from the aws flutter setup example below
 // Future<void> _configureAmplify() async {
 //   await Amplify.addPlugins([
