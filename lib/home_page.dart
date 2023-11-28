@@ -88,7 +88,9 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
+    
     super.initState();
+    
     loadCache();
     loadAllPreviousData();
     calculateRaValues();
@@ -96,16 +98,21 @@ class _HomePageState extends State<HomePage> {
 
   void loadCache() async {
     if (cacheLoaded) {
+      // final path = await getLocalFile(cacheFileName);
+      // if (path.existsSync())
+      // {
+      //   print("hello");
+      // }
+      // print(path.toString());
       print(cache);
       return;
     }
     cache = await readCacheOfUser();
     cacheLoaded = true;
+    studyId = cache['studyId'];
   }
 
   void loadAllPreviousData() async {
-    print(await AwsS3Service().getUserId());
-
     if (prevDataLoaded) {
       return;
     }
@@ -128,9 +135,8 @@ class _HomePageState extends State<HomePage> {
       }
     }
 
-    setState(() {
-      prevDataLoaded = true;
-    });
+    prevDataLoaded = true;
+    
   }
 
   void exportCSV(String fileName, List<dynamic> noiseData) {
@@ -240,7 +246,7 @@ class _HomePageState extends State<HomePage> {
       sendToDataPage();
       ////////////////
     }
-    sendToDataPage();
+    sendToDataPage(); // FOR TESTING ON ANDROID
   }
 
   // Function to process accumulated dBA values

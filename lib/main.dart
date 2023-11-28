@@ -5,7 +5,9 @@ import 'settings_page.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_authenticator/amplify_authenticator.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
-
+import 'local_storage.dart';
+import 'dart:io';
+import 'aws_service.dart';
 import 'amplifyconfiguration.dart';
 import 'package:amplify_storage_s3/amplify_storage_s3.dart';
 
@@ -13,8 +15,6 @@ bool prevDataLoaded = false;
 bool cacheLoaded = false;
 Map<String, dynamic> cache = {};
 String studyId = "UNDEFINED";
-
-
 
 Future<void> _configureAmplify() async {
   try {

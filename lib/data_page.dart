@@ -10,9 +10,6 @@ import 'main.dart';
 
 // All rows of data to be shown. Keeps track of any additions of recordings 
 List<DataItem> data = [
-    DataItem(1, "Item 1", []),
-    DataItem(2, "Item 2", []),
-    DataItem(3, "Item 3", []),
   ];
 
 
@@ -94,34 +91,62 @@ class _DataStoragePageState extends State<DataStoragePage> {
     super.initState();
   }
 
-  // void handleMultipleRows() {
-  //   showModalBottomSheet(context: context, builder: (context) {
-  //     return Container(
-  //       padding: EdgeInsets.all(16),
-  //         child: Column(
-  //           mainAxisSize: MainAxisSize.min,
-  //           children: <Widget>[
-  //             const Text(
-  //               ,
-  //             ),
-  //             SizedBox(height: 16),
-  //             Row(
-  //               mainAxisAlignment: MainAxisAlignment.spaceAround,
-  //               children: <Widget>[
-  //                 ElevatedButton(
-  //                   onPressed: handleEditTitle,
-  //                   child: const Text('Save'),
-  //                 ),
-  //               ]
-  //             )
-  //           ],
-          
-  //     );
-  //   });
-  // }
+  void handleMultipleRows() {
+    int numItems = selectedItems.where((element) => element).length;
+
+    showBottomSheet(
+      context: context, 
+      builder: (context) {
+        return Container(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Text(
+                  'Number of items selected: $numItems',
+                ),
+                SizedBox(height: 16),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: <Widget>[
+                    ElevatedButton(
+                      onPressed: () {
+                        try {
+                          handleMultipleUploads();
+                          _showUploadConfirmation(context);
+                        }
+                        catch (e) {
+                          print(e);
+                          _showUploadFailure(context);
+                        }
+                      },
+                      child: const Text('Upload All'),
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        try {
+                          handleMultipleDeletes();
+                          _showDeletionConfirmation(context);
+                        }
+                        catch (e) {
+                          print(e);
+                          _showDeletionFailure(context);
+                        }
+                        
+                      },
+                      child: const Text('Delete All'),
+                    ),
+                  ]
+                )
+              ],
+            )
+          );
+      });
+   }
 
   void handleRowPress(DataItem item) {
     setState(() {
+      selectedItems = List.generate(data.length, (index) => false);
       selectedItem = item;
       editedTitle = item.title;
     });
@@ -150,10 +175,11 @@ class _DataStoragePageState extends State<DataStoragePage> {
                     child: const Text('Save'),
                   ),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       try {
-                        handleDelete();
+                        await handleDelete();
                         _showDeletionConfirmation(context);
+                        // Navigator.of(context).pop();
                       }
                       catch (e) {
                         print(e);
@@ -164,10 +190,11 @@ class _DataStoragePageState extends State<DataStoragePage> {
                     child: const Text('Delete'), // Add Delete button
                   ),
                   ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       try {
-                        handleUpload();
+                        await handleUpload();
                         _showUploadConfirmation(context);
+                        // Navigator.of(context).pop();
                       }
                       catch (e) {
                         print(e);
@@ -282,21 +309,49 @@ class _DataStoragePageState extends State<DataStoragePage> {
     // }
   }
 
-  void handleDelete() async {
+  Future<void> handleDelete() async {
     if (selectedItem != null) {
       String fileName = selectedItem!.title;
 
-      deleteCacheOfUserUpload(fileName);
-      deleteContent(fileName);
-      
+      cache.removeWhere((key, value) => key == fileName);
+      data.removeWhere((item) => item.id == selectedItem!.id);
 
+      await deleteCacheOfUserUpload(fileName);
+      await deleteContent(fileName);
+      
       setState(() {
-        cache.removeWhere((key, value) => key == fileName);
-        data.removeWhere((item) => item.id == selectedItem!.id);
+        
+        selectedItem = null;
       });
 
-      Navigator.of(context).pop();
     }
+  }
+
+  void handleMultipleDeletes() async {
+    List<DataItem> allItemsToDelete = [];
+    List<String> allFileNamesToDeleteFromCache = [];
+    
+    selectedItems.asMap().forEach((index, selected) async {
+      if (selected) {
+        allItemsToDelete.add(data[index]);
+        allFileNamesToDeleteFromCache.add(data[index].title);
+      }
+    });
+
+    for (DataItem itemToDelete in allItemsToDelete)
+    {
+      cache.removeWhere((key, value) => key == itemToDelete.title);
+      data.removeWhere((item) => item.id == itemToDelete.id);
+      await deleteContent(itemToDelete.title);
+    }
+
+    await deleteCacheOfUserMultipleUpload(allFileNamesToDeleteFromCache);
+
+    setState(() {
+      selectedItem = null;
+      selectedItems = List.generate(data.length, (index) => false);
+    });
+    
   }
 
   void _showUploadConfirmation(BuildContext context) {
@@ -387,11 +442,8 @@ class _DataStoragePageState extends State<DataStoragePage> {
   //   // final awsService = AwsService();
   //   // awsService.handleUpload(selectedItem);
   // }
-  void handleUpload() async {
+  Future<void> handleUpload() async {
     final awsService = AwsS3Service();
-    // Replace 'your/s3/bucket/key' and 'localFilePath' with your specific values
-    // awsService.uploadIOFile('/Users/christian/Desktop/IMG_2193 copy.jpg');
-    // awsService.uploadImage();
     String fileName = selectedItem!.title;
     File csvFile = await getLocalFile(fileName);
     setState(() {
@@ -399,7 +451,38 @@ class _DataStoragePageState extends State<DataStoragePage> {
     });
     
     awsService.uploadCSVFile(csvFile, studyId);
-    writeCacheOfUserUpload(fileName);
+    await writeCacheOfUserUpload(fileName);
+    
+
+  }
+
+  void handleMultipleUploads() async {
+    final awsService = AwsS3Service();
+    List<String> allFilesUploaded = [];
+
+    selectedItems.asMap().forEach((index, selected) async {
+      if (selected) {
+        selectedItem = data[index];
+        print(selectedItem!.title);
+        // await handleUpload();
+        String fileName = selectedItem!.title;
+        File csvFile = await getLocalFile(fileName);
+        cache[fileName] = true;
+
+        awsService.uploadCSVFile(csvFile, studyId);
+        print("Successfully uploaded $fileName");
+        allFilesUploaded.add(fileName);
+      }
+    });
+
+    writeCacheOfUserMultipleUpload(allFilesUploaded);
+
+    setState(() {
+      selectedItem = null;
+      selectedItems = List.generate(data.length, (index) => false);
+
+    });
+
 
   }
 
@@ -412,35 +495,76 @@ class _DataStoragePageState extends State<DataStoragePage> {
 
   @override
   Widget build(BuildContext context) {
+    int selectedCount = selectedItems.where((element) => element).length;
     return Scaffold(
       appBar: AppBar(
         title: Text('Data Storage Page'),
       ),
-      body: ListView.builder(
-        itemCount: data.length,
-        itemBuilder: (context, index) {
-          final item = data[index];
-          return ListTile(
-            title: Text(checkUploaded(item.title)),
-            onTap: () => handleRowPress(item),
-            trailing: Checkbox(
-              value: selectedItems[index],
-              onChanged: (bool? value) {
-                setState(() {
-                  selectedItems[index] = value!;
-                });
+      body: Column(
+        children: [
+          Expanded(child: 
+            ListView.builder(
+              itemCount: data.length,
+              itemBuilder: (context, index) {
+                final item = data[index];
+                return ListTile(
+                  title: Text(checkUploaded(item.title)),
+                  onTap: () => handleRowPress(item),
+                  trailing: Checkbox(
+                    value: selectedItems[index],
+                    onChanged: (bool? value) {
+                      setState(() {
+                        selectedItems[index] = value!;
+                      });
+                    },
+                  ),
+                );
               },
             ),
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          data.add(DataItem(data.length + 1, "New Item", []));
-          setState(() {});
-        },
-        child: Icon(Icons.add),
-      ),
+          ),
+          selectedCount > 0
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      // Perform action with selected items
+                      try {
+                        handleMultipleUploads();
+                        _showUploadConfirmation(context);
+                        print('Uploaded $selectedCount items');
+                      }
+                      catch (e)
+                      {
+                        _showUploadFailure(context);
+                        print(e);
+                      }
+                      
+                    },
+                    child: Text('Upload $selectedCount items'),
+                  ),
+                  SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      // Perform another action with selected items
+                      try {
+                        handleMultipleDeletes();
+                        _showDeletionConfirmation(context);
+                        print('Deleted $selectedCount items');
+                      }
+                      catch (e)
+                      {
+                        _showDeletionFailure(context);
+                        print(e);
+                      }
+                    },
+                    child: Text('Delete $selectedCount items'),
+                  ),
+                ],
+              )
+            : const SizedBox(),
+        ]
+      )
     );
   }
 }

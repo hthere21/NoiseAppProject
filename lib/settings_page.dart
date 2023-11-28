@@ -35,6 +35,27 @@ class _SettingsPageState extends State<SettingsPage> {
     super.dispose();
   }
 
+  void _showSaveConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Save Confirmed'),
+          content: const Text('Successfully Changed StudyId!'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                // Close the AlertDialog
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,11 +75,13 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               ElevatedButton(
                 onPressed: () { 
+                  writeCacheOfUser("studyId", studyId);
                   setState(() {
                     studyId = studyIdController.text;
+                    cache['studyId'] = studyId;
                   });
-                  writeCacheOfUser("studyId", studyId);
                   FocusScope.of(context).unfocus();
+                  _showSaveConfirmation(context);
                 }, 
                 child: const Text("Save")
               ),
