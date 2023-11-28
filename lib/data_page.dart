@@ -113,13 +113,10 @@ class _DataStoragePageState extends State<DataStoragePage> {
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: <Widget>[
                     ElevatedButton(
-                      onPressed: handleEditTitle,
-                      child: const Text('Save'),
-                    ),
-                    ElevatedButton(
                       onPressed: handleDelete,
                       child: const Text('Delete'), // Add Delete button
                     ),
+                    SizedBox(width: 8), // Add space between buttons
                     ElevatedButton(
                       onPressed: () {
                         try {
@@ -132,16 +129,19 @@ class _DataStoragePageState extends State<DataStoragePage> {
                       },
                       child: const Text('Upload'), // Add Upload button
                     ),
+                    SizedBox(width: 8), // Add space between buttons
                     ElevatedButton(
-                        onPressed: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return handleView();
-                            },
-                          );
-                        },
-                        child: const Text('View')),
+                      onPressed: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return handleView();
+                          },
+                        );
+                      },
+                      child: const Text('View'),
+                    ),
+                    SizedBox(width: 8), // Add space between buttons
                     ElevatedButton(
                       onPressed: handleClosePopup,
                       child: const Text('Cancel'),
