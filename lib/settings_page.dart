@@ -61,6 +61,7 @@ class _SettingsPageState extends State<SettingsPage> {
         title: const Text("Settings"),
       ),
       body: GestureDetector(
+        behavior: HitTestBehavior.translucent,
         onTap: () {
           // Dismiss the keyboard when tapping outside of the text field
           FocusScope.of(context).unfocus();
