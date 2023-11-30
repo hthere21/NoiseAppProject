@@ -14,6 +14,20 @@ class SettingsPage extends StatefulWidget {
 
 class _SettingsPageState extends State<SettingsPage> {
   final studyIdController = TextEditingController(text: studyId);
+  late FocusNode _focusNode;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode = FocusNode();
+  }
+
+  @override
+  void dispose() {
+    _focusNode.dispose();
+    studyIdController.dispose();
+    super.dispose();
+  }
 
   Future<void> _signOut(context) async {
     final result = await Amplify.Auth.signOut(
@@ -25,12 +39,6 @@ class _SettingsPageState extends State<SettingsPage> {
       Navigator.of(context)
           .push(MaterialPageRoute(builder: (context) => const MyApp()));
     }
-  }
-
-  @override
-  void dispose() {
-    studyIdController.dispose();
-    super.dispose();
   }
 
   void _showSaveConfirmation(BuildContext context) {
@@ -72,6 +80,8 @@ class _SettingsPageState extends State<SettingsPage> {
             children: [
               TextField(
                 controller: studyIdController,
+                focusNode:
+                    _focusNode, // Assign the focus node to the text field
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Study ID',
