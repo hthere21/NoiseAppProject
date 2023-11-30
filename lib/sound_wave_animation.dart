@@ -33,8 +33,7 @@ class _SoundWaveAnimationState extends State<SoundWaveAnimation>
         TweenSequenceItem(
           tween: Tween<double>(
             begin: _dotHeights[index],
-            end: _dotHeights[index] +
-                25.0,
+            end: _dotHeights[index] + 25.0,
           ),
           weight: 1.0,
         ),
@@ -49,7 +48,7 @@ class _SoundWaveAnimationState extends State<SoundWaveAnimation>
         CurvedAnimation(
           parent: _controller,
           curve: Interval(
-            index / dotCount, 
+            index / dotCount,
             (index + 1) / dotCount,
             curve: Curves.easeInOut,
           ),
@@ -65,6 +64,16 @@ class _SoundWaveAnimationState extends State<SoundWaveAnimation>
     });
   }
 
+  // Method to reset the animation to its initial state
+  void resetAnimation() {
+    _controller.stop();
+    _controller.reset();
+    for (int i = 0; i < dotCount; i++) {
+      _dotHeights[i] = 20.0; // Set initial height value
+    }
+    setState(() {});
+  }
+
   @override
   void didUpdateWidget(SoundWaveAnimation oldWidget) {
     super.didUpdateWidget(oldWidget);
@@ -73,6 +82,7 @@ class _SoundWaveAnimationState extends State<SoundWaveAnimation>
       _controller.repeat();
     } else {
       _controller.stop();
+      resetAnimation(); // Call the reset method when not recording
     }
   }
 

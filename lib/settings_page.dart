@@ -15,17 +15,15 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   final studyIdController = TextEditingController(text: studyId);
 
-
   Future<void> _signOut(context) async {
     final result = await Amplify.Auth.signOut(
       options: const SignOutOptions(globalSignOut: true),
     );
 
-    if (result is CognitoCompleteSignOut)
-    {
+    if (result is CognitoCompleteSignOut) {
       safePrint('Signed out');
-      Navigator.of(context).push(MaterialPageRoute(builder: (context) => const MyApp()));
-
+      Navigator.of(context)
+          .push(MaterialPageRoute(builder: (context) => const MyApp()));
     }
   }
 
@@ -59,10 +57,15 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text("Confirmation"),
-        ),
-        body: Center(
+      appBar: AppBar(
+        title: const Text("Settings"),
+      ),
+      body: GestureDetector(
+        onTap: () {
+          // Dismiss the keyboard when tapping outside of the text field
+          FocusScope.of(context).unfocus();
+        },
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -70,28 +73,34 @@ class _SettingsPageState extends State<SettingsPage> {
                 controller: studyIdController,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
-                  labelText: 'Study ID'
+                  labelText: 'Study ID',
                 ),
               ),
               ElevatedButton(
-                onPressed: () { 
-                  writeCacheOfUser("studyId", studyId);
+                onPressed: () {
+                  // Save Study ID and dismiss keyboard
+                  writeCacheOfUser("studyId", studyIdController.text);
                   setState(() {
                     studyId = studyIdController.text;
                     cache['studyId'] = studyId;
                   });
                   FocusScope.of(context).unfocus();
                   _showSaveConfirmation(context);
-                }, 
-                child: const Text("Save")
+                },
+                child: const Text("Save"),
               ),
               ElevatedButton(
-                onPressed: () => {Amplify.Auth.signOut()}, 
-                child: const Text("Log Out")
+                onPressed: () {
+                  // Sign out and dismiss keyboard
+                  Amplify.Auth.signOut();
+                  FocusScope.of(context).unfocus();
+                },
+                child: const Text("Log Out"),
               )
-            ]
-          )
-        )
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -11,17 +11,17 @@ import 'package:audio_streamer/audio_streamer.dart';
 import 'package:flutter_noise_app_117/sound_wave_animation.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:fftea/fftea.dart';
-import 'package:queue/queue.dart';
+// import 'package:queue/queue.dart';
 import 'data_page.dart';
-import 'package:intl/intl.dart';
+// import 'package:intl/intl.dart';
 import 'package:csv/csv.dart';
 import 'dart:io';
 import 'local_storage.dart';
-import 'package:path_provider/path_provider.dart';
-import 'aws_service.dart';
+// import 'package:path_provider/path_provider.dart';
+// import 'aws_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'main.dart';
-import 'aws_service.dart';
+
 const columnsForNoiseData = ['timeStamp', 'lat', 'lon', 'avg', 'min', 'max'];
 
 class HomePage extends StatefulWidget {
@@ -81,6 +81,8 @@ class _HomePageState extends State<HomePage> {
 
   int? sampleRate;
   bool isRecording = false;
+  bool isStop = false;
+  bool isFinish = false;
   List<double> audio = [];
   List<double>? latestBuffer;
   double? recordingTime;
@@ -92,9 +94,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void initState() {
-    
     super.initState();
-    
+
     loadCache();
     loadAllPreviousData();
     calculateRaValues();
@@ -151,20 +152,12 @@ class _HomePageState extends State<HomePage> {
 
   void loadCache() async {
     if (cacheLoaded) {
-      // final path = await getLocalFile(cacheFileName);
-      // if (path.existsSync())
-      // {
-      //   print("hello");
-      // }
-      // print(path.toString());
-      print(cache);
       return;
     }
     cache = await readCacheOfUser();
     cacheLoaded = true;
     studyId = cache['studyId'];
   }
-
 
   void loadAllPreviousData() async {
     if (prevDataLoaded) {
@@ -189,7 +182,6 @@ class _HomePageState extends State<HomePage> {
     }
 
     prevDataLoaded = true;
-    
   }
 
   void exportCSV(String fileName, List<dynamic> noiseData) {
@@ -225,9 +217,11 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void reset() {
+  Future<void> reset() async {
     setState(() {
+      isStop = false;
       isRecording = false;
+      isFinish = false;
       recordingTimerDuration = 0;
       initialrecordingTimerDuration = 0;
       accumulatedDBAValues.clear();
@@ -259,8 +253,6 @@ class _HomePageState extends State<HomePage> {
 
       ProcessedValues processedValues = ProcessedValues(
         timeStamp: timeStamp,
-        // lat: '0',
-        // lon: '0',
         lat: latitude.toString(),
         lon: longitude.toString(),
         avg: averageDBA,
@@ -271,7 +263,6 @@ class _HomePageState extends State<HomePage> {
 
       //Send data page
       sendToDataPage();
-      ////////////////
     }
     // sendToDataPage(); // FOR TESTING ON ANDROID
   }
@@ -299,8 +290,6 @@ class _HomePageState extends State<HomePage> {
 
     ProcessedValues processedValues = ProcessedValues(
       timeStamp: timeStamp,
-      // lat: '0',
-      // lon: '0',
       lat: latitude.toString(),
       lon: longitude.toString(),
       avg: averageDBA,
@@ -349,6 +338,7 @@ class _HomePageState extends State<HomePage> {
         } else {
           timer.cancel();
           stop();
+          isFinish = true;
         }
       });
     });
@@ -357,7 +347,7 @@ class _HomePageState extends State<HomePage> {
   /// Call-back on audio sample.
   void onAudio(List<double> buffer) async {
     if (recordingTimerDuration == 0) {
-      stop();
+      finish();
       return;
     }
     audio.addAll(buffer);
@@ -413,6 +403,9 @@ class _HomePageState extends State<HomePage> {
     // print(recordingTimeOnAudio);
     if (recordingTimeOnAudio > initialrecordingTimerDuration) {
       setState(() {
+        isFinish = true;
+        isRecording = false;
+        isStop = false;
         recordingTimerDuration = 0;
         recordingTimeOnAudio = 0;
         buffer = [];
@@ -438,7 +431,7 @@ class _HomePageState extends State<HomePage> {
       await requestPermission();
     }
     AudioStreamer().sampleRate = 44100;
-    // Start the countdown timer
+
     if (recordingTimerDuration > 0) {
       startCountdown();
     }
@@ -447,15 +440,27 @@ class _HomePageState extends State<HomePage> {
         AudioStreamer().audioStream.listen(onAudio, onError: handleError);
 
     setState(() {
+      isStop = false;
       isRecording = true;
+      isFinish = false; // Reset isFinish when starting recording
     });
   }
 
   void stop() {
+    countdownTimer?.cancel(); // Cancel the countdown timer
     audioSubscription?.cancel();
-    countdownTimer?.cancel();
     setState(() {
       isRecording = false;
+      isFinish = false;
+      isStop = true;
+    });
+  }
+
+  void finish() {
+    setState(() {
+      isStop = false;
+      isRecording = false;
+      isFinish = false;
       recordingTimerDuration = 0;
       initialrecordingTimerDuration = 0;
     });
@@ -625,36 +630,73 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          FloatingActionButton(
-            backgroundColor: isRecording ? Colors.red : Colors.green,
-            child: isRecording ? Icon(Icons.stop) : Icon(Icons.mic),
-            onPressed: () {
-              setState(() {
-                isRecording = !isRecording;
-              });
-
-              // Start or stop recording based on the current state
-              if (isRecording) {
-                start();
-              } else {
-                stop();
-              }
-            },
-          ),
-          SizedBox(width: 10),
-          FloatingActionButton(
-            child: Icon(Icons.timer),
-            onPressed: () {
-              _showTimerPicker(context);
-            },
-          ),
-          SizedBox(width: 10),
-          FloatingActionButton(
-            child: Icon(Icons.more_time),
-            onPressed: () {
-              _showIntervalPicker(context);
-            },
-          ),
+          if (isFinish)
+            FloatingActionButton.extended(
+              onPressed: () {
+                setState(() {
+                  isRecording = false;
+                  isFinish = false;
+                  finish();
+                  reset();
+                });
+                // Add any logic you need for finishing the recording
+              },
+              label: Text('Finish'),
+              icon: Icon(Icons.check),
+              backgroundColor: Colors.blue,
+            ),
+          SizedBox(width: 5), // Add spacing between buttons
+          if (!isFinish)
+            FloatingActionButton(
+              backgroundColor: isRecording ? Colors.red : Colors.green,
+              child: isRecording ? Icon(Icons.stop) : Icon(Icons.mic),
+              onPressed: () {
+                setState(() {
+                  isRecording = !isRecording;
+                });
+                // Start or stop recording based on the current state
+                if (isRecording) {
+                  start();
+                } else {
+                  stop();
+                }
+              },
+            ),
+          const SizedBox(width: 5),
+          if (!isRecording && !isFinish && !isStop)
+            FloatingActionButton(
+              child: Icon(Icons.timer),
+              onPressed: () {
+                _showTimerPicker(context);
+              },
+            ),
+          const SizedBox(width: 5),
+          if (!isRecording && !isFinish && !isStop)
+            FloatingActionButton(
+              child: Icon(Icons.more_time),
+              onPressed: () {
+                _showIntervalPicker(context);
+              },
+            ),
+          const SizedBox(width: 2),
+          if ((isRecording || isStop) && !isFinish)
+            FloatingActionButton.extended(
+              onPressed: () {
+                reset();
+              },
+              label: Text('Cancel'),
+              icon: Icon(Icons.cancel),
+              backgroundColor: Colors.orange,
+            ),
+          if (!isRecording && isFinish)
+            FloatingActionButton.extended(
+              onPressed: () {
+                reset();
+              },
+              label: Text('Delete'),
+              icon: Icon(Icons.delete),
+              backgroundColor: Colors.red,
+            ),
         ],
       ),
     );
