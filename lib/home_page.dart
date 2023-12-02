@@ -65,7 +65,11 @@ class ProcessedValues {
   }
 }
 
-class _HomePageState extends State<HomePage> {
+class _HomePageState extends State<HomePage>
+    with AutomaticKeepAliveClientMixin {
+  // Add the override for wantKeepAlive
+  @override
+  bool get wantKeepAlive => true;
   //Long and Lat global variables:
   double latitude = 0.0;
   double longitude = 0.0;
@@ -217,7 +221,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> reset() async {
+  void reset() {
     setState(() {
       isStop = false;
       isRecording = false;
@@ -339,7 +343,6 @@ class _HomePageState extends State<HomePage> {
           recordingTimerDuration--;
         } else {
           timer.cancel();
-          stop();
           isFinish = true;
           isRecording = false;
           isStop = false;

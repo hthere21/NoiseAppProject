@@ -9,8 +9,7 @@ import 'dart:io';
 import 'main.dart';
 
 // All rows of data to be shown. Keeps track of any additions of recordings
-List<DataItem> data = [
-  ];
+List<DataItem> data = [];
 
 const List<DataColumn> COLUMNS = [
   DataColumn(
@@ -81,7 +80,6 @@ class _DataStoragePageState extends State<DataStoragePage> {
   String editedTitle = "";
   List<bool> selectedItems = List.generate(data.length, (index) => false);
 
-
   @override
   void initState() {
     super.initState();
@@ -91,54 +89,49 @@ class _DataStoragePageState extends State<DataStoragePage> {
     int numItems = selectedItems.where((element) => element).length;
 
     showBottomSheet(
-      context: context, 
-      builder: (context) {
-        return Container(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                Text(
-                  'Number of items selected: $numItems',
-                ),
-                SizedBox(height: 16),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: <Widget>[
-                    ElevatedButton(
-                      onPressed: () {
-                        try {
-                          handleMultipleUploads();
-                          _showUploadConfirmation(context);
-                        }
-                        catch (e) {
-                          print(e);
-                          _showUploadFailure(context);
-                        }
-                      },
-                      child: const Text('Upload All'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        try {
-                          handleMultipleDeletes();
-                          _showDeletionConfirmation(context);
-                        }
-                        catch (e) {
-                          print(e);
-                          _showDeletionFailure(context);
-                        }
-                        
-                      },
-                      child: const Text('Delete All'),
-                    ),
-                  ]
-                )
-              ],
-            )
-          );
-      });
-   }
+        context: context,
+        builder: (context) {
+          return Container(
+              padding: EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  Text(
+                    'Number of items selected: $numItems',
+                  ),
+                  SizedBox(height: 16),
+                  Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: <Widget>[
+                        ElevatedButton(
+                          onPressed: () {
+                            try {
+                              handleMultipleUploads();
+                              _showUploadConfirmation(context);
+                            } catch (e) {
+                              print(e);
+                              _showUploadFailure(context);
+                            }
+                          },
+                          child: const Text('Upload All'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            try {
+                              handleMultipleDeletes();
+                              _showDeletionConfirmation(context);
+                            } catch (e) {
+                              print(e);
+                              _showDeletionFailure(context);
+                            }
+                          },
+                          child: const Text('Delete All'),
+                        ),
+                      ])
+                ],
+              ));
+        });
+  }
 
   void handleRowPress(DataItem item) {
     setState(() {
@@ -170,17 +163,15 @@ class _DataStoragePageState extends State<DataStoragePage> {
                   children: <Widget>[
                     ElevatedButton(
                       onPressed: () async {
-                      try {
-                        await handleDelete();
-                        _showDeletionConfirmation(context);
-                        // Navigator.of(context).pop();
-                      }
-                      catch (e) {
-                        print(e);
-                        _showDeletionFailure(context);
-                      }
-                      
-                    },
+                        try {
+                          await handleDelete();
+                          _showDeletionConfirmation(context);
+                          // Navigator.of(context).pop();
+                        } catch (e) {
+                          print(e);
+                          _showDeletionFailure(context);
+                        }
+                      },
                       child: const Text('Delete'), // Add Delete button
                     ),
                     SizedBox(width: 8), // Add space between buttons
@@ -190,7 +181,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
                           await handleUpload();
                           _showUploadConfirmation(context);
                           // Navigator.of(context).pop();
-                      } catch (e) {
+                        } catch (e) {
                           print(e);
                           _showUploadFailure(context);
                         }
@@ -308,19 +299,17 @@ class _DataStoragePageState extends State<DataStoragePage> {
 
       await deleteCacheOfUserUpload(fileName);
       await deleteContent(fileName);
-      
+
       setState(() {
-        
         selectedItem = null;
       });
-
     }
   }
 
   void handleMultipleDeletes() async {
     List<DataItem> allItemsToDelete = [];
     List<String> allFileNamesToDeleteFromCache = [];
-    
+
     selectedItems.asMap().forEach((index, selected) async {
       if (selected) {
         allItemsToDelete.add(data[index]);
@@ -328,8 +317,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
       }
     });
 
-    for (DataItem itemToDelete in allItemsToDelete)
-    {
+    for (DataItem itemToDelete in allItemsToDelete) {
       cache.removeWhere((key, value) => key == itemToDelete.title);
       data.removeWhere((item) => item.id == itemToDelete.id);
       await deleteContent(itemToDelete.title);
@@ -341,7 +329,6 @@ class _DataStoragePageState extends State<DataStoragePage> {
       selectedItem = null;
       selectedItems = List.generate(data.length, (index) => false);
     });
-    
   }
 
   void _showUploadConfirmation(BuildContext context) {
@@ -427,6 +414,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
       },
     );
   }
+
   // void handleUpload() {
   //   // // Call the AWS service to handle the upload
   //   // final awsService = AwsService();
@@ -439,11 +427,9 @@ class _DataStoragePageState extends State<DataStoragePage> {
     setState(() {
       cache[fileName] = true;
     });
-    
+
     awsService.uploadCSVFile(csvFile, studyId);
     await writeCacheOfUserUpload(fileName);
-    
-
   }
 
   void handleMultipleUploads() async {
@@ -470,10 +456,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
     setState(() {
       selectedItem = null;
       selectedItems = List.generate(data.length, (index) => false);
-
     });
-
-
   }
 
   String checkUploaded(String fileName) {
@@ -487,13 +470,12 @@ class _DataStoragePageState extends State<DataStoragePage> {
   Widget build(BuildContext context) {
     int selectedCount = selectedItems.where((element) => element).length;
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Data Storage Page'),
-      ),
-      body: Column(
-        children: [
-          Expanded(child: 
-            ListView.builder(
+        appBar: AppBar(
+          title: Text('Data Storage Page'),
+        ),
+        body: Column(children: [
+          Expanded(
+            child: ListView.builder(
               itemCount: data.length,
               itemBuilder: (context, index) {
                 final item = data[index];
@@ -513,48 +495,45 @@ class _DataStoragePageState extends State<DataStoragePage> {
             ),
           ),
           selectedCount > 0
-            ? Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      // Perform action with selected items
-                      try {
-                        handleMultipleUploads();
-                        _showUploadConfirmation(context);
-                        print('Uploaded $selectedCount items');
-                      }
-                      catch (e)
-                      {
-                        _showUploadFailure(context);
-                        print(e);
-                      }
-                      
-                    },
-                    child: Text('Upload $selectedCount items'),
-                  ),
-                  SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      // Perform another action with selected items
-                      try {
-                        handleMultipleDeletes();
-                        _showDeletionConfirmation(context);
-                        print('Deleted $selectedCount items');
-                      }
-                      catch (e)
-                      {
-                        _showDeletionFailure(context);
-                        print(e);
-                      }
-                    },
-                    child: Text('Delete $selectedCount items'),
-                  ),
-                ],
-              )
-            : const SizedBox(),
-        ]
-      )
-    );
+              ? Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            // Perform action with selected items
+                            try {
+                              handleMultipleUploads();
+                              _showUploadConfirmation(context);
+                              print('Uploaded $selectedCount items');
+                            } catch (e) {
+                              _showUploadFailure(context);
+                              print(e);
+                            }
+                          },
+                          child: Text('Upload $selectedCount items'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Perform another action with selected items
+                            try {
+                              handleMultipleDeletes();
+                              _showDeletionConfirmation(context);
+                              print('Deleted $selectedCount items');
+                            } catch (e) {
+                              _showDeletionFailure(context);
+                              print(e);
+                            }
+                          },
+                          child: Text('Delete $selectedCount items'),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 25), // Adjust the height as needed
+                  ],
+                )
+              : const SizedBox(), // Empty SizedBox when selectedCount is not greater than 0
+        ]));
   }
 }
