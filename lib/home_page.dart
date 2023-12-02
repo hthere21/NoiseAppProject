@@ -210,6 +210,7 @@ class _HomePageState extends State<HomePage>
   void sendToDataPage() {
     String fileName = '${DateTime.now().toString()}.csv';
     List<dynamic> newArray = [];
+    print("SendToDataPage");
     for (ProcessedValues newData in dataList) {
       newArray.add(newData.toMap());
     }
@@ -236,9 +237,12 @@ class _HomePageState extends State<HomePage>
   }
 
   void checkAccumulatedArray() async {
+    print("Check AccumulatedArray");
     // Check if recording has stopped
-    if (!isRecording && accumulatedDBAValues.isNotEmpty) {
-      List<double> valuesToCalculate = accumulatedDBAValues;
+    print(accumulatedDBAValues);
+    if (accumulatedDBAValues.isNotEmpty) {
+      print(accumulatedDBAValues);
+      List<double> valuesToCalculate = List.from(accumulatedDBAValues);
       accumulatedDBAValues = [];
       // Calculate the sum of dBA values
       double sumOfDBA =
@@ -264,7 +268,7 @@ class _HomePageState extends State<HomePage>
         max: maxDBA,
       );
       dataList.add(processedValues);
-
+      print("Data: " + dataList.toString());
       //Send data page
       sendToDataPage();
       print("OK");
@@ -461,13 +465,13 @@ class _HomePageState extends State<HomePage>
   }
 
   void stop() {
-    countdownTimer?.cancel(); // Cancel the countdown timer
-    audioSubscription?.cancel();
     setState(() {
       isRecording = false;
       isFinish = false;
       isStop = true;
     });
+    countdownTimer?.cancel(); // Cancel the countdown timer
+    audioSubscription?.cancel();
   }
 
   void finish() {
