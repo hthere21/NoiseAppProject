@@ -8,7 +8,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cupertino_icons/cupertino_icons.dart';
 import 'package:audio_streamer/audio_streamer.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter_noise_app_117/sound_wave_animation.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:fftea/fftea.dart';
@@ -218,7 +217,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  void reset() {
+  Future<void> reset() async {
     setState(() {
       isStop = false;
       isRecording = false;
@@ -430,7 +429,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<bool> checkPermission() async => await Permission.microphone.isGranted;
-
   Future<void> requestPermission() async =>
       await Permission.microphone.request();
 
@@ -479,6 +477,58 @@ class _HomePageState extends State<HomePage> {
       initialrecordingTimerDuration = 0;
     });
     reset();
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Center(
+          child: AlertDialog(
+            title: Text(
+              'Recording Finished',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.green, // Set the text color to green
+              ),
+            ),
+            content: Text('Your recording has been completed successfully.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void showRecordingCanelDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            'Recording Canceled',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.orange, // Set the text color to green
+            ),
+          ),
+          content: Text('Your recording has been cancelled.'),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   void _showIntervalPicker(BuildContext context) {
@@ -700,7 +750,9 @@ class _HomePageState extends State<HomePage> {
           if ((isRecording && !isFinish) || (isStop && !isFinish))
             FloatingActionButton.extended(
               onPressed: () {
+                stop();
                 reset();
+                showRecordingCanelDialog(context);
               },
               label: Text('Cancel'),
               icon: Icon(Icons.cancel),
