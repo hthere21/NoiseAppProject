@@ -8,6 +8,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cupertino_icons/cupertino_icons.dart';
 import 'package:audio_streamer/audio_streamer.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_noise_app_117/sound_wave_animation.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:fftea/fftea.dart';
@@ -217,7 +218,7 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> reset() async {
+  void reset() {
     setState(() {
       isStop = false;
       isRecording = false;
@@ -263,6 +264,8 @@ class _HomePageState extends State<HomePage> {
 
       //Send data page
       sendToDataPage();
+      print("OK");
+      print(dataList);
     }
     // sendToDataPage(); // FOR TESTING ON ANDROID
   }
@@ -339,6 +342,8 @@ class _HomePageState extends State<HomePage> {
           timer.cancel();
           stop();
           isFinish = true;
+          isRecording = false;
+          isStop = false;
         }
       });
     });
@@ -346,74 +351,82 @@ class _HomePageState extends State<HomePage> {
 
   /// Call-back on audio sample.
   void onAudio(List<double> buffer) async {
-    if (recordingTimerDuration == 0) {
-      finish();
-      return;
-    }
-    audio.addAll(buffer);
-    audioDataQueue.add(buffer);
-
-    List<double> chunk = audioDataQueue.removeFirst();
-    List<List<double>> smallerArrays = [];
-    List<double> dBA_Arrays = [];
-    int j = 0;
-    while (j < chunk.length) {
-      int end = j + 1920;
-      if (end > chunk.length) {
-        end = chunk.length;
+    try {
+      if (recordingTimerDuration == 0) {
+        reset();
+        return;
       }
-      smallerArrays.add(chunk.sublist(j, end));
-      j = end;
-    }
+      audio.addAll(buffer);
+      audioDataQueue.add(buffer);
 
-    for (List<double> smallerArray in smallerArrays) {
-      final fft = FFT(smallerArray.length);
-      final freq = fft.realFft(smallerArray);
-      List<double> dBAValues = [];
-
-      for (int j = 0; j < 960; j++) {
-        final double real = freq[j].x;
-        final double imaginary = freq[j].y;
-
-        // Precompute squared values
-        final Pi =
-            (2 * (sqrt((real * real + imaginary * imaginary) / 3686400)));
-        final dBi = 20 * log10(Pi);
-        // Calculate the magnitude value for the current frequency bin
-        final dBAvalue_i = dBi + 20 * log10(pow(2, 15)) + RaValues[j];
-        final dBAvalue = pow(10, ((dBAvalue_i) / 10));
-        dBAValues.add(dBAvalue as double);
+      // print(buffer.length);
+      List<double> chunk = audioDataQueue.removeFirst();
+      List<List<double>> smallerArrays = [];
+      List<double> dBA_Arrays = [];
+      int j = 0;
+      while (j < chunk.length) {
+        int end = j + 1920;
+        if (end > chunk.length) {
+          end = chunk.length;
+        }
+        smallerArrays.add(chunk.sublist(j, end));
+        j = end;
       }
-      final final_dBA = (10 * log10((dBAValues.sum)));
-      dBA_Arrays.add(final_dBA);
-    }
-    accumulatedDBAValues.addAll(dBA_Arrays);
-    // Check if enough values are accumulated based on the selected interval
-    num requiredLength = ((selectedIntervalInSeconds * 1000) / 43.5374).round();
-    // print(requiredLength);
-    if (accumulatedDBAValues.length >= requiredLength) {
-      // Call the function to process accumulated dBA values
-      processAccumulatedDBAValues();
-    }
-    dBA_Arrays = [];
 
-    // Get the actual sampling rate, if not already known.
-    sampleRate ??= await AudioStreamer().actualSampleRate;
-    double recordingTimeOnAudio = audio.length / sampleRate!;
-    // print(recordingTimeOnAudio);
-    if (recordingTimeOnAudio > initialrecordingTimerDuration) {
-      setState(() {
-        isFinish = true;
-        isRecording = false;
-        isStop = false;
-        recordingTimerDuration = 0;
-        recordingTimeOnAudio = 0;
-        buffer = [];
-      });
-      return;
-    }
+      for (List<double> smallerArray in smallerArrays) {
+        final fft = FFT(smallerArray.length);
+        final freq = fft.realFft(smallerArray);
+        List<double> dBAValues = [];
 
-    setState(() => latestBuffer = buffer);
+        for (int j = 0; j < 960; j++) {
+          final double real = freq[j].x;
+          final double imaginary = freq[j].y;
+
+          // Precompute squared values
+          final Pi =
+              (2 * (sqrt((real * real + imaginary * imaginary) / 3686400)));
+          final dBi = 20 * log10(Pi);
+          // Calculate the magnitude value for the current frequency bin
+          final dBAvalue_i = dBi + 20 * log10(pow(2, 15)) + RaValues[j];
+          final dBAvalue = pow(10, ((dBAvalue_i) / 10));
+          dBAValues.add(dBAvalue as double);
+        }
+        final final_dBA = (10 * log10((dBAValues.sum)));
+        dBA_Arrays.add(final_dBA);
+      }
+      accumulatedDBAValues.addAll(dBA_Arrays);
+      // Check if enough values are accumulated based on the selected interval
+      num requiredLength =
+          ((selectedIntervalInSeconds * 1000) / 43.5374).round();
+      // print(requiredLength);
+      if (accumulatedDBAValues.length >= requiredLength) {
+        // Call the function to process accumulated dBA values
+        processAccumulatedDBAValues();
+      }
+      dBA_Arrays = [];
+
+      // Get the actual sampling rate, if not already known.
+      sampleRate ??= await AudioStreamer().actualSampleRate;
+      double recordingTimeOnAudio = audio.length / sampleRate!;
+      // print(recordingTimeOnAudio);
+      if (recordingTimeOnAudio > initialrecordingTimerDuration) {
+        stop();
+        setState(() {
+          isFinish = true;
+          isRecording = false;
+          isStop = false;
+          recordingTimerDuration = 0;
+          recordingTimeOnAudio = 0;
+          buffer = [];
+        });
+        return;
+      }
+
+      setState(() => latestBuffer = buffer);
+    } catch (e, stackTrace) {
+      print('Exception: $e');
+      print('Stack Trace: $stackTrace');
+    }
   }
 
   Future<bool> checkPermission() async => await Permission.microphone.isGranted;
@@ -457,6 +470,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   void finish() {
+    checkAccumulatedArray();
     setState(() {
       isStop = false;
       isRecording = false;
@@ -464,7 +478,6 @@ class _HomePageState extends State<HomePage> {
       recordingTimerDuration = 0;
       initialrecordingTimerDuration = 0;
     });
-    checkAccumulatedArray();
     reset();
   }
 
@@ -584,7 +597,6 @@ class _HomePageState extends State<HomePage> {
           children: <Widget>[
             // Conditionally include SoundWaveAnimation when recording
             SoundWaveAnimation(isRecording: isRecording),
-
             Container(
               margin: EdgeInsets.all(25),
               child: Column(
@@ -630,21 +642,27 @@ class _HomePageState extends State<HomePage> {
       floatingActionButton: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
-          if (isFinish)
+          if (isFinish && !isRecording)
             FloatingActionButton.extended(
               onPressed: () {
-                setState(() {
-                  isRecording = false;
-                  isFinish = false;
-                  finish();
-                  reset();
-                });
+                finish();
                 // Add any logic you need for finishing the recording
               },
               label: Text('Finish'),
               icon: Icon(Icons.check),
               backgroundColor: Colors.blue,
             ),
+          const SizedBox(width: 2),
+          if (!isRecording && isFinish)
+            FloatingActionButton.extended(
+              onPressed: () {
+                reset();
+              },
+              label: Text('Delete'),
+              icon: Icon(Icons.delete),
+              backgroundColor: Colors.red,
+            ),
+
           SizedBox(width: 5), // Add spacing between buttons
           if (!isFinish)
             FloatingActionButton(
@@ -663,7 +681,7 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           const SizedBox(width: 5),
-          if (!isRecording && !isFinish && !isStop)
+          if (!isFinish && !isRecording && !isStop)
             FloatingActionButton(
               child: Icon(Icons.timer),
               onPressed: () {
@@ -671,7 +689,7 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           const SizedBox(width: 5),
-          if (!isRecording && !isFinish && !isStop)
+          if (!isFinish && !isRecording && !isStop)
             FloatingActionButton(
               child: Icon(Icons.more_time),
               onPressed: () {
@@ -679,7 +697,7 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           const SizedBox(width: 2),
-          if ((isRecording || isStop) && !isFinish)
+          if ((isRecording && !isFinish) || (isStop && !isFinish))
             FloatingActionButton.extended(
               onPressed: () {
                 reset();
@@ -687,15 +705,6 @@ class _HomePageState extends State<HomePage> {
               label: Text('Cancel'),
               icon: Icon(Icons.cancel),
               backgroundColor: Colors.orange,
-            ),
-          if (!isRecording && isFinish)
-            FloatingActionButton.extended(
-              onPressed: () {
-                reset();
-              },
-              label: Text('Delete'),
-              icon: Icon(Icons.delete),
-              backgroundColor: Colors.red,
             ),
         ],
       ),

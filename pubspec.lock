@@ -146,7 +146,7 @@ packages:
     source: hosted
     version: "0.1.18"
   audio_streamer:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: audio_streamer
       sha256: f9084f3d4c98bd83ad5255a8b9250adcc81515de170efd7ef16a7663f8b8d95c
