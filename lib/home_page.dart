@@ -25,6 +25,7 @@ import 'aws_service.dart';
 const columnsForNoiseData = ['timeStamp', 'lat', 'lon', 'avg', 'min', 'max'];
 
 class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -89,19 +90,17 @@ class _HomePageState extends State<HomePage> {
   StreamSubscription<List<double>>? audioSubscription;
   DateTime? recordingStartTime;
   // Checks if the data has already been loaded
-
+  
   @override
   void initState() {
-    
     super.initState();
     
-    loadCache();
-    loadAllPreviousData();
     calculateRaValues();
     // Start fetching geolocation every 30 seconds
     Timer.periodic(Duration(seconds: 5), (timer) {
       getCurrentLocation();
     });
+
   }
 
   @override
@@ -149,7 +148,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void loadCache() async {
+  Future<void> loadCache() async {
     if (cacheLoaded) {
       // final path = await getLocalFile(cacheFileName);
       // if (path.existsSync())
@@ -165,8 +164,28 @@ class _HomePageState extends State<HomePage> {
     studyId = cache['studyId'];
   }
 
+  Future<void> loadUserInfo() async {
+    firstName = "";
+    lastName = "";
+    final userInfo = await AwsS3Service().getUserInformation();
+    print(userInfo);
+    for (var a in userInfo)
+    {
+      if (a.userAttributeKey.key == 'name')
+      {
+        firstName = a.value;
+      }
 
-  void loadAllPreviousData() async {
+      if (a.userAttributeKey.key == 'family_name')
+      {
+        lastName = a.value;
+      }
+    }
+
+    
+  }
+
+  Future<void> loadAllPreviousData() async {
     if (prevDataLoaded) {
       return;
     }
@@ -566,6 +585,7 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {
