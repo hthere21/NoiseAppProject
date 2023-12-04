@@ -184,7 +184,6 @@ class _HomePageState extends State<HomePage>
         data.add(item);
       }
     }
-
     prevDataLoaded = true;
   }
 

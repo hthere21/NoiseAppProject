@@ -79,10 +79,13 @@ class _DataStoragePageState extends State<DataStoragePage> {
   DataItem? selectedItem;
   String editedTitle = "";
   List<bool> selectedItems = List.generate(data.length, (index) => false);
+  // Assuming this boolean variable to track whether data is loaded or not
+  bool isDataLoaded = false;
 
   @override
   void initState() {
     super.initState();
+    // Check if the list is empty
   }
 
   void handleMultipleRows() {
@@ -468,6 +471,15 @@ class _DataStoragePageState extends State<DataStoragePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Check if data is not loaded, display loading page
+    if (!prevDataLoaded) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(), // Or your custom loading widget
+        ),
+      );
+    }
+
     int selectedCount = selectedItems.where((element) => element).length;
     return Scaffold(
         appBar: AppBar(
