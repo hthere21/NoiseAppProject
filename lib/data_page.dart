@@ -475,11 +475,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
   
 
   @override
-<<<<<<< HEAD
-  Widget build(BuildContext context) {
-=======
   Widget build(BuildContext context) { 
->>>>>>> 2288f8265cfee1fd73664a7bf5505c13e8dc6e8a
     // Check if data is not loaded, display loading page
     if (!prevDataLoaded) {
       return Scaffold(
@@ -488,10 +484,6 @@ class _DataStoragePageState extends State<DataStoragePage> {
         ),
       );
     }
-<<<<<<< HEAD
-
-=======
->>>>>>> 2288f8265cfee1fd73664a7bf5505c13e8dc6e8a
     int selectedCount = selectedItems.where((element) => element).length;
     return Scaffold(
         appBar: AppBar(

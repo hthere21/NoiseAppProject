@@ -107,9 +107,9 @@ class _MyAppState extends State<MyApp> {
             body: const TabBarView(
               // controller: tabController,
               children: [
-                HomePage(key: PageStorageKey('Home')), // Use HomePage as the content for the "Home" tab
-                DataStoragePage(key: PageStorageKey('Data')),
-                SettingsPage(key: PageStorageKey('Settings')),
+                HomePage(), // Use HomePage as the content for the "Home" tab
+                DataStoragePage(),
+                SettingsPage(),
               ], 
             ),
           ),
