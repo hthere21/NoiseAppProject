@@ -98,6 +98,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
 
     loadCache();
+    loadUserInfo();
     loadAllPreviousData();
     calculateRaValues();
     // Start fetching geolocation every 30 seconds
