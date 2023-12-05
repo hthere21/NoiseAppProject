@@ -18,13 +18,14 @@ import 'package:csv/csv.dart';
 import 'dart:io';
 import 'local_storage.dart';
 // import 'package:path_provider/path_provider.dart';
-// import 'aws_service.dart';
+import 'aws_service.dart';
 import 'package:geolocator/geolocator.dart';
 import 'main.dart';
 
 const columnsForNoiseData = ['timeStamp', 'lat', 'lon', 'avg', 'min', 'max'];
 
 class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
   @override
   State<HomePage> createState() => _HomePageState();
 }
@@ -91,7 +92,7 @@ class _HomePageState extends State<HomePage> {
   StreamSubscription<List<double>>? audioSubscription;
   DateTime? recordingStartTime;
   // Checks if the data has already been loaded
-
+  
   @override
   void initState() {
     super.initState();
@@ -103,6 +104,7 @@ class _HomePageState extends State<HomePage> {
     Timer.periodic(Duration(seconds: 5), (timer) {
       getCurrentLocation();
     });
+
   }
 
   @override
@@ -150,7 +152,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void loadCache() async {
+  Future<void> loadCache() async {
     if (cacheLoaded) {
       return;
     }
@@ -159,7 +161,28 @@ class _HomePageState extends State<HomePage> {
     studyId = cache['studyId'];
   }
 
-  void loadAllPreviousData() async {
+  Future<void> loadUserInfo() async {
+    firstName = "";
+    lastName = "";
+    final userInfo = await AwsS3Service().getUserInformation();
+    print(userInfo);
+    for (var a in userInfo)
+    {
+      if (a.userAttributeKey.key == 'name')
+      {
+        firstName = a.value;
+      }
+
+      if (a.userAttributeKey.key == 'family_name')
+      {
+        lastName = a.value;
+      }
+    }
+
+    
+  }
+
+  Future<void> loadAllPreviousData() async {
     if (prevDataLoaded) {
       return;
     }
@@ -571,6 +594,7 @@ class _HomePageState extends State<HomePage> {
       },
     );
   }
+
 
   @override
   Widget build(BuildContext context) {

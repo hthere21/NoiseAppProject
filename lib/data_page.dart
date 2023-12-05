@@ -64,6 +64,9 @@ const List<DataColumn> COLUMNS = [
 ];
 
 class DataStoragePage extends StatefulWidget {
+  const DataStoragePage({Key? key}) : super(key: key);
+
+
   @override
   _DataStoragePageState createState() => _DataStoragePageState();
 }

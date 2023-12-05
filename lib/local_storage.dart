@@ -1,42 +1,27 @@
-import 'dart:collection';
-import 'dart:math';
-import 'dart:async';
 import 'dart:core';
 import 'dart:convert';
 import 'package:flutter_noise_app_117/main.dart';
-import 'package:intl/intl.dart';
 import 'package:csv/csv.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-
-const String cacheFileName = "user.json";
-
+  
+// Get directory for only storing app information
 Future<String> get localPath async {
   final directory = await getApplicationDocumentsDirectory();
-  // print(directory.path);
   return directory.path;
 }
 
+// Get local file stored in the app directory
 Future<File> getLocalFile(String fileName) async {
   final path = await localPath;
   return File('$path/$fileName');
 }
 
+// Writing csv files with the given data
 Future<File> writeContent(String fileName, String data) async {
   final file = await getLocalFile(fileName);
   // Write the file
   return file.writeAsString(data);
-}
-
-Future<void> initializeCache() async {
-  final path = await getLocalFile(cacheFileName);
-  if (await path.exists())
-  {
-    return;
-  }
-  Map<String, dynamic> jsonResponse = {};
-  jsonResponse["studyId"] = studyId;
-  
 }
 
 // Stores misc information about user's actions (ex: studyid, what files were uploaded) 
@@ -105,7 +90,7 @@ Future<File> deleteCacheOfUserUpload(String fileName) async {
 
 }
 
-// Stores misc information about user's actions (ex: studyid, what files were uploaded) 
+// Deletes information about user's actions (ex: what files were uploaded) 
 Future<File> deleteCacheOfUserMultipleUpload(List<String> fileNames) async {
   final path = await getLocalFile(cacheFileName);
   Map<String, dynamic> jsonResponse = {};
@@ -148,6 +133,7 @@ Future<Map<String,dynamic>> readCacheOfUser() async {
   }
 }
 
+// Deletes csv file
 Future<void> deleteContent(String fileName) async {
   String path = await localPath;
   try {
