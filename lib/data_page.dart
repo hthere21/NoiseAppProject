@@ -63,9 +63,6 @@ const List<DataColumn> COLUMNS = [
 ];
 
 class DataStoragePage extends StatefulWidget {
-  const DataStoragePage({Key? key}) : super(key: key);
-
-
   @override
   _DataStoragePageState createState() => _DataStoragePageState();
 }
@@ -157,9 +154,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
             children: <Widget>[
               TextField(
                 controller: TextEditingController(text: editedTitle),
-                onChanged: (value) {
-                  editedTitle = value;
-                },
+                readOnly: true, // Set readOnly to true to make it non-editable
               ),
               SizedBox(height: 16),
               SingleChildScrollView(
@@ -472,10 +467,8 @@ class _DataStoragePageState extends State<DataStoragePage> {
     return fileName;
   }
 
-  
-
   @override
-  Widget build(BuildContext context) { 
+  Widget build(BuildContext context) {
     // Check if data is not loaded, display loading page
     if (!prevDataLoaded) {
       return Scaffold(
@@ -484,6 +477,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
         ),
       );
     }
+
     int selectedCount = selectedItems.where((element) => element).length;
     return Scaffold(
         appBar: AppBar(

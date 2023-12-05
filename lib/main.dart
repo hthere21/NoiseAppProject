@@ -19,7 +19,6 @@ const String cacheFileName = "user.json";
 String firstName = "";
 String lastName = "";
 
-
 Future<void> _configureAmplify() async {
   try {
     final auth = AmplifyAuthCognito();
@@ -52,12 +51,10 @@ class _MyAppState extends State<MyApp> {
     super.initState();
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Authenticator(
-      signUpForm: SignUpForm.custom(
-      fields: [
+      signUpForm: SignUpForm.custom(fields: [
         SignUpFormField.username(),
         SignUpFormField.password(),
         SignUpFormField.passwordConfirmation(),
@@ -68,23 +65,23 @@ class _MyAppState extends State<MyApp> {
         switch (state.currentStep) {
           case AuthenticatorStep.confirmSignUp:
             return Scaffold(
-              appBar: AppBar(
-                title: const Text("Confirmation"),
-              ),
-              body: Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text("Please wait for the owners to confirm the sign up."),
-                    ElevatedButton(
-                      onPressed: () => state.changeStep(
-                        AuthenticatorStep.signIn,
-                      ), 
-                      child: const Text('Return To Sign In'))
-                  ],
+                appBar: AppBar(
+                  title: const Text("Confirmation"),
                 ),
-              )
-            );
+                body: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                          "Please wait for the owners to confirm the sign up."),
+                      ElevatedButton(
+                          onPressed: () => state.changeStep(
+                                AuthenticatorStep.signIn,
+                              ),
+                          child: const Text('Return To Sign In'))
+                    ],
+                  ),
+                ));
           default:
             return null;
         }
@@ -104,13 +101,13 @@ class _MyAppState extends State<MyApp> {
                 ],
               ),
             ),
-            body: const TabBarView(
+            body: TabBarView(
               // controller: tabController,
               children: [
                 HomePage(), // Use HomePage as the content for the "Home" tab
                 DataStoragePage(),
                 SettingsPage(),
-              ], 
+              ],
             ),
           ),
         ),
