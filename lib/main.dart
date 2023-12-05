@@ -15,6 +15,10 @@ bool prevDataLoaded = false;
 bool cacheLoaded = false;
 Map<String, dynamic> cache = {};
 String studyId = "UNDEFINED";
+const String cacheFileName = "user.json";
+String firstName = "";
+String lastName = "";
+
 
 Future<void> _configureAmplify() async {
   try {
@@ -100,11 +104,12 @@ class _MyAppState extends State<MyApp> {
                 ],
               ),
             ),
-            body: TabBarView(
+            body: const TabBarView(
+              // controller: tabController,
               children: [
-                HomePage(), // Use HomePage as the content for the "Home" tab
-                DataStoragePage(),
-                SettingsPage(),
+                HomePage(key: PageStorageKey('Home')), // Use HomePage as the content for the "Home" tab
+                DataStoragePage(key: PageStorageKey('Data')),
+                SettingsPage(key: PageStorageKey('Settings')),
               ], 
             ),
           ),

@@ -92,6 +92,16 @@ class AwsS3Service {
     }
   }
 
+  Future<List<AuthUserAttribute>> getUserInformation() async {
+  try {
+      final attributes = await Amplify.Auth.fetchUserAttributes();
+      return attributes;
+    } catch (e) {
+      print("Error fetching user information: $e");
+      return [];
+    }
+  }
+
   Future<String> getUserId() async {
     try {
       final attributes = await Amplify.Auth.fetchUserAttributes();
