@@ -71,7 +71,6 @@ class DataItem {
   final int id;
   String title;
   List<dynamic> data;
-
   DataItem(this.id, this.title, this.data);
 }
 
@@ -86,6 +85,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
   void initState() {
     super.initState();
     // Check if the list is empty
+    // data.sort((a, b) => b.title.compareTo(a.title));
   }
 
   void handleMultipleRows() {
@@ -488,15 +488,17 @@ class _DataStoragePageState extends State<DataStoragePage> {
             child: ListView.builder(
               itemCount: data.length,
               itemBuilder: (context, index) {
-                final item = data[index];
+                final sortedData = [...data];
+                sortedData.sort((a, b) => b.title.compareTo(a.title));
+                final item = sortedData[index];
                 return ListTile(
                   title: Text(checkUploaded(item.title)),
                   onTap: () => handleRowPress(item),
                   trailing: Checkbox(
-                    value: selectedItems[index],
+                    value: selectedItems[data.length - 1 - index],
                     onChanged: (bool? value) {
                       setState(() {
-                        selectedItems[index] = value!;
+                        selectedItems[data.length - 1 - index] = value!;
                       });
                     },
                   ),

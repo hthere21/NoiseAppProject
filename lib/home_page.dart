@@ -96,7 +96,7 @@ class _HomePageState extends State<HomePage>
   StreamSubscription<List<double>>? audioSubscription;
   DateTime? recordingStartTime;
   // Checks if the data has already been loaded
-  
+
   @override
   void initState() {
     super.initState();
@@ -109,7 +109,6 @@ class _HomePageState extends State<HomePage>
     Timer.periodic(Duration(seconds: 5), (timer) {
       getCurrentLocation();
     });
-
   }
 
   @override
@@ -171,20 +170,15 @@ class _HomePageState extends State<HomePage>
     lastName = "";
     final userInfo = await AwsS3Service().getUserInformation();
     print(userInfo);
-    for (var a in userInfo)
-    {
-      if (a.userAttributeKey.key == 'name')
-      {
+    for (var a in userInfo) {
+      if (a.userAttributeKey.key == 'name') {
         firstName = a.value;
       }
 
-      if (a.userAttributeKey.key == 'family_name')
-      {
+      if (a.userAttributeKey.key == 'family_name') {
         lastName = a.value;
       }
     }
-
-    
   }
 
   Future<void> loadAllPreviousData() async {
@@ -245,28 +239,13 @@ class _HomePageState extends State<HomePage>
     });
   }
 
-  void reset() {
-    setState(() {
-      isStop = false;
-      isRecording = false;
-      isFinish = false;
-      recordingTimerDuration = 0;
-      initialrecordingTimerDuration = 0;
-      accumulatedDBAValues.clear();
-      audio.clear();
-      latestBuffer = null;
-      dataList.clear();
-    });
-  }
-
-  void checkAccumulatedArray() async {
+  void checkAccumulatedArray() {
     print("Check AccumulatedArray");
-    // Check if recording has stopped
     print(accumulatedDBAValues);
-    if (accumulatedDBAValues.isNotEmpty) {
-      print(accumulatedDBAValues);
+    // Check if recording has stopped
+    if (accumulatedDBAValues.length > 0) {
       List<double> valuesToCalculate = List.from(accumulatedDBAValues);
-      accumulatedDBAValues = [];
+      accumulatedDBAValues.clear();
       // Calculate the sum of dBA values
       double sumOfDBA =
           valuesToCalculate.fold(0, (acc, dBA) => acc + pow(10, dBA / 10));
@@ -291,17 +270,15 @@ class _HomePageState extends State<HomePage>
         max: maxDBA,
       );
       dataList.add(processedValues);
-      print("Data: " + dataList.toString());
-      //Send data page
-      sendToDataPage();
-      print("OK");
-      print(dataList);
     }
+    print(dataList.length);
+    //Send data page
+    sendToDataPage();
     // sendToDataPage(); // FOR TESTING ON ANDROID
   }
 
   // Function to process accumulated dBA values
-  void processAccumulatedDBAValues() async {
+  void processAccumulatedDBAValues() {
     int valuesToTake = ((selectedIntervalInSeconds * 1000) / 43.5374).round();
     List<double> valuesToCalculate = accumulatedDBAValues.sublist(
         0, min(valuesToTake + 1, accumulatedDBAValues.length));
@@ -366,13 +343,14 @@ class _HomePageState extends State<HomePage>
   void startCountdown() {
     countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
       setState(() {
-        if (recordingTimerDuration > 0) {
-          recordingTimerDuration--;
-        } else {
-          timer.cancel();
+        if (recordingTimerDuration == 0) {
+          audioSubscription?.cancel();
+          countdownTimer?.cancel();
           isFinish = true;
           isRecording = false;
           isStop = false;
+        } else {
+          recordingTimerDuration--;
         }
       });
     });
@@ -381,14 +359,12 @@ class _HomePageState extends State<HomePage>
   /// Call-back on audio sample.
   void onAudio(List<double> buffer) async {
     try {
-      if (recordingTimerDuration == 0) {
-        reset();
-        return;
-      }
+      // if (recordingTimerDuration == 0 && isFinish) {
+      //   reset();
+      //   return;
+      // }
       audio.addAll(buffer);
       audioDataQueue.add(buffer);
-
-      // print(buffer.length);
       List<double> chunk = audioDataQueue.removeFirst();
       List<List<double>> smallerArrays = [];
       List<double> dBA_Arrays = [];
@@ -423,22 +399,11 @@ class _HomePageState extends State<HomePage>
         final final_dBA = (10 * log10((dBAValues.sum)));
         dBA_Arrays.add(final_dBA);
       }
-      accumulatedDBAValues.addAll(dBA_Arrays);
-      // Check if enough values are accumulated based on the selected interval
-      num requiredLength =
-          ((selectedIntervalInSeconds * 1000) / 43.5374).round();
-      // print(requiredLength);
-      if (accumulatedDBAValues.length >= requiredLength) {
-        // Call the function to process accumulated dBA values
-        processAccumulatedDBAValues();
-      }
-      dBA_Arrays = [];
 
       // Get the actual sampling rate, if not already known.
       sampleRate ??= await AudioStreamer().actualSampleRate;
       double recordingTimeOnAudio = audio.length / sampleRate!;
-      // print(recordingTimeOnAudio);
-      if (recordingTimeOnAudio > initialrecordingTimerDuration) {
+      if (recordingTimeOnAudio >= initialrecordingTimerDuration) {
         stop();
         setState(() {
           isFinish = true;
@@ -450,6 +415,17 @@ class _HomePageState extends State<HomePage>
         });
         return;
       }
+
+      accumulatedDBAValues.addAll(dBA_Arrays);
+      // Check if enough values are accumulated based on the selected interval
+      num requiredLength =
+          ((selectedIntervalInSeconds * 1000) / 43.5374).round();
+      // print(requiredLength);
+      if (accumulatedDBAValues.length >= requiredLength) {
+        // Call the function to process accumulated dBA values
+        processAccumulatedDBAValues();
+      }
+      dBA_Arrays.clear();
 
       setState(() => latestBuffer = buffer);
     } catch (e, stackTrace) {
@@ -471,11 +447,10 @@ class _HomePageState extends State<HomePage>
     if (!(await checkPermission())) {
       await requestPermission();
     }
-    AudioStreamer().sampleRate = 44100;
-
     if (recordingTimerDuration > 0) {
       startCountdown();
     }
+    AudioStreamer().sampleRate = 44100;
 
     audioSubscription =
         AudioStreamer().audioStream.listen(onAudio, onError: handleError);
@@ -483,22 +458,42 @@ class _HomePageState extends State<HomePage>
     setState(() {
       isStop = false;
       isRecording = true;
-      isFinish = false; // Reset isFinish when starting recording
+      isFinish = false;
+    });
+  }
+
+  void reset() {
+    setState(() {
+      print("reset121312");
+      print(accumulatedDBAValues);
+      // Reset your state variables to their initial values
+      recordingTimerDuration = 0;
+      initialrecordingTimerDuration = 0;
+      selectedIntervalInSeconds = 1;
+      audio.clear();
+      accumulatedDBAValues.clear();
+      dataList.clear();
+      isRecording = false;
+      isFinish = false;
+      isStop = false;
     });
   }
 
   void stop() {
+    countdownTimer?.cancel(); // Cancel the countdown timer
+    audioSubscription?.cancel();
     setState(() {
       isRecording = false;
       isFinish = false;
       isStop = true;
     });
-    countdownTimer?.cancel(); // Cancel the countdown timer
-    audioSubscription?.cancel();
   }
 
   void finish() {
+    print("finish");
+    print(accumulatedDBAValues);
     checkAccumulatedArray();
+    reset();
     setState(() {
       isStop = false;
       isRecording = false;
@@ -506,7 +501,6 @@ class _HomePageState extends State<HomePage>
       recordingTimerDuration = 0;
       initialrecordingTimerDuration = 0;
     });
-    reset();
 
     showDialog(
       context: context,
@@ -665,7 +659,6 @@ class _HomePageState extends State<HomePage>
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -737,6 +730,7 @@ class _HomePageState extends State<HomePage>
           if (!isRecording && isFinish)
             FloatingActionButton.extended(
               onPressed: () {
+                stop();
                 reset();
               },
               label: Text('Delete'),
