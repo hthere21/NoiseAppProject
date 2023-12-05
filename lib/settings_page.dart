@@ -15,7 +15,8 @@ class SettingsPage extends StatefulWidget {
 
 class UpperCaseTextFormatter extends TextInputFormatter {
   @override
-  TextEditingValue formatEditUpdate(TextEditingValue oldValue, TextEditingValue newValue) {
+  TextEditingValue formatEditUpdate(
+      TextEditingValue oldValue, TextEditingValue newValue) {
     return TextEditingValue(
       text: newValue.text.toUpperCase(),
       selection: newValue.selection,
@@ -44,6 +45,7 @@ class _SettingsPageState extends State<SettingsPage> {
     lastNameController.dispose();
     super.dispose();
   }
+
   Future<void> _signOut(context) async {
     final result = await Amplify.Auth.signOut(
       options: const SignOutOptions(globalSignOut: true),
@@ -59,7 +61,8 @@ class _SettingsPageState extends State<SettingsPage> {
       lastName = "";
       studyId = "UNDEFINED";
 
-      Navigator.of(context).push(MaterialPageRoute(builder: (context) => const MyApp()));
+      Navigator.of(context)
+          .push(MaterialPageRoute(builder: (context) => const MyApp()));
     }
   }
 
@@ -88,7 +91,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Settings"),
+        title: const Text(""),
       ),
       body: GestureDetector(
         behavior: HitTestBehavior.translucent,
@@ -96,10 +99,21 @@ class _SettingsPageState extends State<SettingsPage> {
           // Dismiss the keyboard when tapping outside of the text field
           FocusScope.of(context).unfocus();
         },
-        child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              // Fake CircleAvatar
+              CircleAvatar(
+                radius: 60, // Adjust the radius as needed
+                backgroundColor: Colors.grey, // Set the background color
+                child: Icon(
+                  Icons.person,
+                  size: 80,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 16), // Adjust the spacing as needed
               TextField(
                 controller: firstNameController,
                 enabled: false,
@@ -108,7 +122,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   labelText: 'First Name',
                 ),
               ),
-              const Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15)),
+              const SizedBox(height: 10),
               TextField(
                 controller: lastNameController,
                 enabled: false,
@@ -117,22 +131,25 @@ class _SettingsPageState extends State<SettingsPage> {
                   labelText: 'Last Name',
                 ),
               ),
-              const Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15)),
+              const SizedBox(height: 10),
               TextField(
                 inputFormatters: [
                   UpperCaseTextFormatter(),
-                  FilteringTextInputFormatter.allow(RegExp("[0-9a-zA-Z]"))
+                  FilteringTextInputFormatter.allow(RegExp("[0-9a-zA-Z]")),
                 ],
                 controller: studyIdController,
-                focusNode:
-                    _focusNode, // Assign the focus node to the text field
+                focusNode: _focusNode,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   labelText: 'Study ID',
                 ),
               ),
-              const Text("For Study ID - Only alphanumeric characters are allowed."),
-              const Padding(padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15)),
+              const SizedBox(height: 8),
+              const Text(
+                "For Study ID - Only alphanumeric characters are allowed.",
+                style: TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+              const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: () {
                   // Save Study ID and dismiss keyboard
@@ -143,17 +160,31 @@ class _SettingsPageState extends State<SettingsPage> {
                   });
                   FocusScope.of(context).unfocus();
                   _showSaveConfirmation(context);
-                }, 
-                child: const Text("Save Study ID")
+                },
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.green, // Set button color to red
+                ),
+                child: const Text(
+                  "Save Study ID",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
+              const SizedBox(height: 100),
               ElevatedButton(
                 onPressed: () {
                   // Sign out and dismiss keyboard
                   Amplify.Auth.signOut();
                   FocusScope.of(context).unfocus();
                 },
-                child: const Text("Log Out"),
-              )
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.red, // Set button color to red
+                ),
+                child: const Text(
+                  "Log Out",
+                  style:
+                      TextStyle(color: Colors.white), // Set text color to white
+                ),
+              ),
             ],
           ),
         ),
