@@ -65,7 +65,6 @@ class _SettingsPageState extends State<SettingsPage> {
         lastName = "";
         data.clear();
       });
-      
 
       Navigator.of(context)
           .push(MaterialPageRoute(builder: (context) => const MyApp()));
@@ -107,92 +106,94 @@ class _SettingsPageState extends State<SettingsPage> {
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // Fake CircleAvatar
-              CircleAvatar(
-                radius: 60, // Adjust the radius as needed
-                backgroundColor: Colors.grey, // Set the background color
-                child: Icon(
-                  Icons.person,
-                  size: 80,
-                  color: Colors.white,
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                // Fake CircleAvatar
+                CircleAvatar(
+                  radius: 60, // Adjust the radius as needed
+                  backgroundColor: Colors.grey, // Set the background color
+                  child: Icon(
+                    Icons.person,
+                    size: 80,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16), // Adjust the spacing as needed
-              TextField(
-                controller: firstNameController,
-                enabled: false,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'First Name',
+                const SizedBox(height: 16), // Adjust the spacing as needed
+                TextField(
+                  controller: firstNameController,
+                  enabled: false,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'First Name',
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: lastNameController,
-                enabled: false,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Last Name',
+                const SizedBox(height: 10),
+                TextField(
+                  controller: lastNameController,
+                  enabled: false,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Last Name',
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                inputFormatters: [
-                  UpperCaseTextFormatter(),
-                  FilteringTextInputFormatter.allow(RegExp("[0-9a-zA-Z]")),
-                ],
-                controller: studyIdController,
-                focusNode: _focusNode,
-                decoration: const InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: 'Study ID',
+                const SizedBox(height: 10),
+                TextField(
+                  inputFormatters: [
+                    UpperCaseTextFormatter(),
+                    FilteringTextInputFormatter.allow(RegExp("[0-9a-zA-Z]")),
+                  ],
+                  controller: studyIdController,
+                  focusNode: _focusNode,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Study ID',
+                  ),
                 ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                "For Study ID - Only alphanumeric characters are allowed.",
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () {
-                  // Save Study ID and dismiss keyboard
-                  writeCacheOfUser("studyId", studyIdController.text);
-                  setState(() {
-                    studyId = studyIdController.text;
-                    cache['studyId'] = studyId;
-                  });
-                  FocusScope.of(context).unfocus();
-                  _showSaveConfirmation(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.green, // Set button color to red
+                const SizedBox(height: 8),
+                const Text(
+                  "For Study ID - Only alphanumeric characters are allowed.",
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
                 ),
-                child: const Text(
-                  "Save Study ID",
-                  style: TextStyle(color: Colors.white),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    // Save Study ID and dismiss keyboard
+                    writeCacheOfUser("studyId", studyIdController.text);
+                    setState(() {
+                      studyId = studyIdController.text;
+                      cache['studyId'] = studyId;
+                    });
+                    FocusScope.of(context).unfocus();
+                    _showSaveConfirmation(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.green, // Set button color to red
+                  ),
+                  child: const Text(
+                    "Save Study ID",
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  // Sign out and dismiss keyboard
-                  // Amplify.Auth.signOut();
-                  
-                  FocusScope.of(context).unfocus();
-                  _signOut(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.red, // Set button color to red
+                ElevatedButton(
+                  onPressed: () {
+                    // Sign out and dismiss keyboard
+                    // Amplify.Auth.signOut();
+
+                    FocusScope.of(context).unfocus();
+                    _signOut(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.red, // Set button color to red
+                  ),
+                  child: const Text(
+                    "Log Out",
+                    style: TextStyle(
+                        color: Colors.white), // Set text color to white
+                  ),
                 ),
-                child: const Text(
-                  "Log Out",
-                  style:
-                      TextStyle(color: Colors.white), // Set text color to white
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
