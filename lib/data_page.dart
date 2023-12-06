@@ -8,9 +8,6 @@ import 'local_storage.dart';
 import 'dart:io';
 import 'main.dart';
 
-// All rows of data to be shown. Keeps track of any additions of recordings
-List<DataItem> data = [];
-
 const List<DataColumn> COLUMNS = [
   DataColumn(
     label: Expanded(

@@ -101,14 +101,23 @@ class _HomePageState extends State<HomePage>
   void initState() {
     super.initState();
 
-    loadCache();
-    loadUserInfo();
-    loadAllPreviousData();
+    setUpInfo();
     calculateRaValues();
     // Start fetching geolocation every 30 seconds
     Timer.periodic(Duration(seconds: 5), (timer) {
       getCurrentLocation();
     });
+  }
+
+  void setUpInfo() async {
+    await loadUserInfo();
+    await createUserDirectory();
+    await loadAllPreviousData();
+    await loadCache();
+    
+    // Checking if all user data is loaded
+    dataSetup = true;
+    
   }
 
   @override
@@ -158,11 +167,14 @@ class _HomePageState extends State<HomePage>
 
   Future<void> loadCache() async {
     if (cacheLoaded) {
+      
       return;
     }
     cache = await readCacheOfUser();
     cacheLoaded = true;
     studyId = cache['studyId'];
+    print(cache);
+    
   }
 
   Future<void> loadUserInfo() async {
@@ -177,6 +189,10 @@ class _HomePageState extends State<HomePage>
 
       if (a.userAttributeKey.key == 'family_name') {
         lastName = a.value;
+      }
+
+      if (a.userAttributeKey.key == 'email') {
+        userId = a.value;
       }
     }
   }
@@ -661,6 +677,14 @@ class _HomePageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
+    if (!dataSetup) {
+      return Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(), // Or your custom loading widget
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Audio Recording'),

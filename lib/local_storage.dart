@@ -5,10 +5,35 @@ import 'package:csv/csv.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
+Future<void> createUserDirectory() async {
+  final directory = await getApplicationDocumentsDirectory();
+  
+  String directoryPath = '${directory.path}/$userId';
+  Directory newDirectory = Directory(directoryPath);
+  if (!(await newDirectory.exists())) {
+    await newDirectory.create(recursive: true);
+    print("Directory created: $directoryPath");
+  } else {
+    print("Directory already exists: $directoryPath");
+  }
+
+}
+
 // Get directory for only storing app information
 Future<String> get localPath async {
   final directory = await getApplicationDocumentsDirectory();
-  return directory.path;
+  String directoryPath = '${directory.path}/$userId';
+  print(directoryPath);
+  Directory newDirectory = Directory(directoryPath);
+
+  if (!(await newDirectory.exists())) {
+    await newDirectory.create(recursive: true);
+    print("Directory created: $directoryPath");
+  } else {
+    print("Directory already exists: $directoryPath");
+  }
+
+  return directoryPath; 
 }
 
 // Get local file stored in the app directory
@@ -121,9 +146,8 @@ Future<Map<String, dynamic>> readCacheOfUser() async {
 
 // Deletes csv file
 Future<void> deleteContent(String fileName) async {
-  String path = await localPath;
   try {
-    final file = File('$path/$fileName');
+    final file = await getLocalFile(fileName);
     await file.delete();
   } catch (e) {
     rethrow;
@@ -139,8 +163,8 @@ Future<List<File>> get listOfFiles async {
       files.add(file);
     }
   }
-
-  // print(files);
+  print("ALL FILES");
+  print(files);
   return files;
 }
 

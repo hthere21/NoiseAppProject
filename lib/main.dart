@@ -13,11 +13,15 @@ import 'package:amplify_storage_s3/amplify_storage_s3.dart';
 
 bool prevDataLoaded = false;
 bool cacheLoaded = false;
+bool dataSetup = false;
 Map<String, dynamic> cache = {};
 String studyId = "UNDEFINED";
+String userId = "";
 const String cacheFileName = "user.json";
 String firstName = "";
 String lastName = "";
+// All rows of data to be shown. Keeps track of any additions of recordings
+List<DataItem> data = [];
 
 Future<void> _configureAmplify() async {
   try {

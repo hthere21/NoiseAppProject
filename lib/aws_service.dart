@@ -51,8 +51,8 @@ class AwsS3Service {
         key: 'studyid=$studyId/userid=$userId/${csvFile.path.split('/').last}'
       ).result;
       safePrint('Uploaded file: ${uploadResult.uploadedItem.key}');
-    } on StorageException catch (e) {
-      safePrint('Error uploading file: ${e.message}');
+    } catch (e) {
+      safePrint('Error uploading file: $e');
       rethrow;
     }
   }

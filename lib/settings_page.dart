@@ -54,12 +54,18 @@ class _SettingsPageState extends State<SettingsPage> {
     if (result is CognitoCompleteSignOut) {
       safePrint('Signed out');
 
-      // Reset all data
-      cacheLoaded = false;
-      prevDataLoaded = false;
-      firstName = "";
-      lastName = "";
-      studyId = "UNDEFINED";
+      setState(() {
+        // Reset all data
+        prevDataLoaded = false;
+        cacheLoaded = false;
+        cache = {};
+        studyId = "UNDEFINED";
+        userId = "";
+        firstName = "";
+        lastName = "";
+        data.clear();
+      });
+      
 
       Navigator.of(context)
           .push(MaterialPageRoute(builder: (context) => const MyApp()));
@@ -169,12 +175,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   style: TextStyle(color: Colors.white),
                 ),
               ),
-              const SizedBox(height: 100),
               ElevatedButton(
                 onPressed: () {
                   // Sign out and dismiss keyboard
-                  Amplify.Auth.signOut();
+                  // Amplify.Auth.signOut();
+                  
                   FocusScope.of(context).unfocus();
+                  _signOut(context);
                 },
                 style: ElevatedButton.styleFrom(
                   primary: Colors.red, // Set button color to red
