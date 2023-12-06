@@ -88,6 +88,7 @@ class _HomePageState extends State<HomePage>
   bool isRecording = false;
   bool isStop = false;
   bool isFinish = false;
+  bool isPickingTime = false;
   List<double> audio = [];
   List<double>? latestBuffer;
   double? recordingTime;
@@ -114,10 +115,9 @@ class _HomePageState extends State<HomePage>
     await createUserDirectory();
     await loadAllPreviousData();
     await loadCache();
-    
+
     // Checking if all user data is loaded
     dataSetup = true;
-    
   }
 
   @override
@@ -167,14 +167,12 @@ class _HomePageState extends State<HomePage>
 
   Future<void> loadCache() async {
     if (cacheLoaded) {
-      
       return;
     }
     cache = await readCacheOfUser();
     cacheLoaded = true;
     studyId = cache['studyId'];
     print(cache);
-    
   }
 
   Future<void> loadUserInfo() async {
@@ -375,10 +373,10 @@ class _HomePageState extends State<HomePage>
   /// Call-back on audio sample.
   void onAudio(List<double> buffer) async {
     try {
-      // if (recordingTimerDuration == 0 && isFinish) {
-      //   reset();
-      //   return;
-      // }
+      if (!isPickingTime && !isFinish) {
+        reset();
+        return;
+      }
       audio.addAll(buffer);
       audioDataQueue.add(buffer);
       List<double> chunk = audioDataQueue.removeFirst();
@@ -475,12 +473,12 @@ class _HomePageState extends State<HomePage>
       isStop = false;
       isRecording = true;
       isFinish = false;
+      isPickingTime = true;
     });
   }
 
   void reset() {
     setState(() {
-      print("reset121312");
       print(accumulatedDBAValues);
       // Reset your state variables to their initial values
       recordingTimerDuration = 0;
@@ -492,6 +490,7 @@ class _HomePageState extends State<HomePage>
       isRecording = false;
       isFinish = false;
       isStop = false;
+      isPickingTime = false;
     });
   }
 
