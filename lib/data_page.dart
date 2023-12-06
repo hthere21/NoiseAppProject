@@ -85,53 +85,53 @@ class _DataStoragePageState extends State<DataStoragePage> {
     // data.sort((a, b) => b.title.compareTo(a.title));
   }
 
-  void handleMultipleRows() {
-    int numItems = selectedItems.where((element) => element).length;
+  // void handleMultipleRows() {
+  //   int numItems = selectedItems.where((element) => element).length;
 
-    showBottomSheet(
-        context: context,
-        builder: (context) {
-          return Container(
-              padding: EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  Text(
-                    'Number of items selected: $numItems',
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: <Widget>[
-                        ElevatedButton(
-                          onPressed: () {
-                            try {
-                              handleMultipleUploads();
-                              _showUploadConfirmation(context);
-                            } catch (e) {
-                              print(e);
-                              _showUploadFailure(context);
-                            }
-                          },
-                          child: const Text('Upload All'),
-                        ),
-                        ElevatedButton(
-                          onPressed: () {
-                            try {
-                              handleMultipleDeletes();
-                              _showDeletionConfirmation(context);
-                            } catch (e) {
-                              print(e);
-                              _showDeletionFailure(context);
-                            }
-                          },
-                          child: const Text('Delete All'),
-                        ),
-                      ])
-                ],
-              ));
-        });
-  }
+  //   showBottomSheet(
+  //       context: context,
+  //       builder: (context) {
+  //         return Container(
+  //             padding: EdgeInsets.all(16),
+  //             child: Column(
+  //               mainAxisSize: MainAxisSize.min,
+  //               children: <Widget>[
+  //                 Text(
+  //                   'Number of items selected: $numItems',
+  //                 ),
+  //                 SizedBox(height: 16),
+  //                 Row(
+  //                     mainAxisAlignment: MainAxisAlignment.spaceAround,
+  //                     children: <Widget>[
+  //                       ElevatedButton(
+  //                         onPressed: () {
+  //                           try {
+  //                             handleMultipleUploads();
+  //                             _showUploadConfirmation(context);
+  //                           } catch (e) {
+  //                             print(e);
+  //                             _showUploadFailure(context);
+  //                           }
+  //                         },
+  //                         child: const Text('Upload All'),
+  //                       ),
+  //                       ElevatedButton(
+  //                         onPressed: () {
+  //                           try {
+  //                             handleMultipleDeletes();
+  //                             _showDeletionConfirmation(context);
+  //                           } catch (e) {
+  //                             print(e);
+  //                             _showDeletionFailure(context);
+  //                           }
+  //                         },
+  //                         child: const Text('Delete All'),
+  //                       ),
+  //                     ])
+  //               ],
+  //             ));
+  //       });
+  // }
 
   void handleRowPress(DataItem item) {
     setState(() {
@@ -180,6 +180,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
                           _showUploadConfirmation(context);
                           // Navigator.of(context).pop();
                         } catch (e) {
+                          print("UPLOAD FAILED");
                           print(e);
                           _showUploadFailure(context);
                         }
@@ -304,29 +305,39 @@ class _DataStoragePageState extends State<DataStoragePage> {
     }
   }
 
-  void handleMultipleDeletes() async {
+  Future<void> handleMultipleDeletes() async {
     List<DataItem> allItemsToDelete = [];
     List<String> allFileNamesToDeleteFromCache = [];
 
-    selectedItems.asMap().forEach((index, selected) async {
+    // selectedItems.asMap().forEach((index, selected) async {
+    //   if (selected) {
+    //     allItemsToDelete.add(data[index]);
+    //     allFileNamesToDeleteFromCache.add(data[index].title);
+    //   }
+    // });
+
+    for (final (index, selected) in selectedItems.indexed) {
       if (selected) {
         allItemsToDelete.add(data[index]);
         allFileNamesToDeleteFromCache.add(data[index].title);
       }
-    });
-
-    for (DataItem itemToDelete in allItemsToDelete) {
-      cache.removeWhere((key, value) => key == itemToDelete.title);
-      data.removeWhere((item) => item.id == itemToDelete.id);
-      await deleteContent(itemToDelete.title);
     }
-
-    await deleteCacheOfUserMultipleUpload(allFileNamesToDeleteFromCache);
-
-    setState(() {
-      selectedItem = null;
-      selectedItems = List.generate(data.length, (index) => false);
-    });
+  
+    try {
+      for (DataItem itemToDelete in allItemsToDelete) {
+        cache.removeWhere((key, value) => key == itemToDelete.title);
+        data.removeWhere((item) => item.id == itemToDelete.id);
+        await deleteContent(itemToDelete.title);
+      }
+      await deleteCacheOfUserMultipleUpload(allFileNamesToDeleteFromCache);
+    } catch (e) {
+      print("Failed to delte multiple $e");
+    } finally {
+      setState(() {
+        selectedItem = null;
+        selectedItems = List.generate(data.length, (index) => false);
+      });
+    }
   }
 
   void _showUploadConfirmation(BuildContext context) {
@@ -420,41 +431,67 @@ class _DataStoragePageState extends State<DataStoragePage> {
   // }
   Future<void> handleUpload() async {
     final awsService = AwsS3Service();
-    String fileName = selectedItem!.title;
-    File csvFile = await getLocalFile(fileName);
-    setState(() {
-      cache[fileName] = true;
-    });
 
-    awsService.uploadCSVFile(csvFile, studyId);
-    await writeCacheOfUserUpload(fileName);
+    try {
+      String fileName = selectedItem!.title;
+      File csvFile = await getLocalFile(fileName);
+      await awsService.uploadCSVFile(csvFile, studyId);
+      setState(() {
+        cache[fileName] = true;
+      });
+      await writeCacheOfUserUpload(fileName);
+    }
+    catch (e) {
+      print("FAILING");
+      rethrow;
+    }
+    
   }
 
-  void handleMultipleUploads() async {
+  Future<void> handleMultipleUploads() async {
     final awsService = AwsS3Service();
     List<String> allFilesUploaded = [];
+    try {
+      // String userId = await awsService.getUserId(); // Test if there is internet
+      // selectedItems.asMap().forEach((index, selected) async {
+      //   if (selected) {
+      //     selectedItem = data[index];
+      //     print(selectedItem!.title);
+      //     // await handleUpload();
+      //     String fileName = selectedItem!.title;
+      //     File csvFile = await getLocalFile(fileName);
+      //     await awsService.uploadCSVFile(csvFile, studyId);
+      //     cache[fileName] = true;
+      //     print("Successfully uploaded $fileName");
+      //     allFilesUploaded.add(fileName);
+      //   }
+      // });
+      for (final (index, selected) in selectedItems.indexed) {
+        if (selected) {
+          selectedItem = data[index];
+          print(selectedItem!.title);
+          // await handleUpload();
+          String fileName = selectedItem!.title;
+          File csvFile = await getLocalFile(fileName);
+          await awsService.uploadCSVFile(csvFile, studyId);
+          cache[fileName] = true;
+          print("Successfully uploaded $fileName");
+          allFilesUploaded.add(fileName);
+        }
+      } 
 
-    selectedItems.asMap().forEach((index, selected) async {
-      if (selected) {
-        selectedItem = data[index];
-        print(selectedItem!.title);
-        // await handleUpload();
-        String fileName = selectedItem!.title;
-        File csvFile = await getLocalFile(fileName);
-        cache[fileName] = true;
+      // print(allFilesUploaded);
+      await writeCacheOfUserMultipleUpload(allFilesUploaded);
+    } catch (e) {
+      print("Error with multiple uploads $e");
+      rethrow;
+    } finally {
+      setState(() {
+        selectedItem = null;
+        selectedItems = List.generate(data.length, (index) => false);
+      });
+    }
 
-        awsService.uploadCSVFile(csvFile, studyId);
-        print("Successfully uploaded $fileName");
-        allFilesUploaded.add(fileName);
-      }
-    });
-
-    writeCacheOfUserMultipleUpload(allFilesUploaded);
-
-    setState(() {
-      selectedItem = null;
-      selectedItems = List.generate(data.length, (index) => false);
-    });
   }
 
   String checkUploaded(String fileName) {
@@ -510,24 +547,25 @@ class _DataStoragePageState extends State<DataStoragePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             // Perform action with selected items
                             try {
-                              handleMultipleUploads();
+                              await handleMultipleUploads();
                               _showUploadConfirmation(context);
                               print('Uploaded $selectedCount items');
                             } catch (e) {
                               _showUploadFailure(context);
                               print(e);
                             }
+                            
                           },
                           child: Text('Upload $selectedCount items'),
                         ),
                         ElevatedButton(
-                          onPressed: () {
+                          onPressed: () async {
                             // Perform another action with selected items
                             try {
-                              handleMultipleDeletes();
+                              await handleMultipleDeletes();
                               _showDeletionConfirmation(context);
                               print('Deleted $selectedCount items');
                             } catch (e) {

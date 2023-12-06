@@ -43,51 +43,17 @@ class AwsS3Service {
 // }
 
   Future<void> uploadCSVFile(io.File csvFile, String studyId) async {
-    final awsFile = AWSFilePlatform.fromFile(csvFile);
-    String userId = await getUserId();
     try {
+      final awsFile = AWSFilePlatform.fromFile(csvFile);
+      String userId = await getUserId();
+    
       final uploadResult = await Amplify.Storage.uploadFile(
         localFile: awsFile, 
         key: 'studyid=$studyId/userid=$userId/${csvFile.path.split('/').last}'
       ).result;
-      safePrint('Uploaded file: ${uploadResult.uploadedItem.key}');
+      print('Uploaded file: ${uploadResult.uploadedItem.key}');
     } catch (e) {
-      safePrint('Error uploading file: $e');
-      rethrow;
-    }
-  }
-
-  Future<void> uploadImage() async {
-    // Select a file from the device
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      withData: false,
-      // Ensure to get file stream for better performance
-      withReadStream: true,
-      allowedExtensions: ['jpg', 'png', 'gif'],
-    );
-
-    if (result == null) {
-      safePrint('No file selected');
-      return;
-    }
-
-    // Upload file with its filename as the key
-    final platformFile = result.files.single;
-    try {
-      final result = await Amplify.Storage.uploadFile(
-        localFile: AWSFile.fromStream(
-          platformFile.readStream!,
-          size: platformFile.size,
-        ),
-        key: platformFile.name,
-        onProgress: (progress) {
-          safePrint('Fraction completed: ${progress.fractionCompleted}');
-        },
-      ).result;
-      safePrint('Successfully uploaded file: ${result.uploadedItem.key}');
-    } on StorageException catch (e) {
-      safePrint('Error uploading file: $e');
+      print("Error uploading CSV file: $e");
       rethrow;
     }
   }
@@ -98,7 +64,7 @@ class AwsS3Service {
       return attributes;
     } catch (e) {
       print("Error fetching user information: $e");
-      return [];
+      rethrow;
     }
   }
 

@@ -18,6 +18,7 @@ Map<String, dynamic> cache = {};
 String studyId = "UNDEFINED";
 String userId = "";
 const String cacheFileName = "user.json";
+const String cacheLastLoginFileName = "lastLogin.json";
 String firstName = "";
 String lastName = "";
 // All rows of data to be shown. Keeps track of any additions of recordings

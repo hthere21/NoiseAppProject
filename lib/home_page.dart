@@ -115,6 +115,7 @@ class _HomePageState extends State<HomePage>
     await createUserDirectory();
     await loadAllPreviousData();
     await loadCache();
+    await storeLastLogin();
 
     // Checking if all user data is loaded
     dataSetup = true;
@@ -178,21 +179,32 @@ class _HomePageState extends State<HomePage>
   Future<void> loadUserInfo() async {
     firstName = "";
     lastName = "";
-    final userInfo = await AwsS3Service().getUserInformation();
-    print(userInfo);
-    for (var a in userInfo) {
-      if (a.userAttributeKey.key == 'name') {
-        firstName = a.value;
-      }
+    try {
+      final userInfo = await AwsS3Service().getUserInformation();
+      print(userInfo);
+      for (var a in userInfo) {
+        if (a.userAttributeKey.key == 'name') {
+          firstName = a.value;
+        }
 
-      if (a.userAttributeKey.key == 'family_name') {
-        lastName = a.value;
-      }
+        if (a.userAttributeKey.key == 'family_name') {
+          lastName = a.value;
+        }
 
-      if (a.userAttributeKey.key == 'email') {
-        userId = a.value;
+        if (a.userAttributeKey.key == 'email') {
+          userId = a.value;
+        }
       }
+      
     }
+    catch (e){
+      print("Loading local user info");
+      Map<String, dynamic> lastLoginInfo = await readLastLogin();
+      userId = lastLoginInfo['userId'];
+      firstName = lastLoginInfo['firstName'];
+      lastName = lastLoginInfo['lastName'];
+    }
+
   }
 
   Future<void> loadAllPreviousData() async {

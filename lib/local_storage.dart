@@ -19,19 +19,31 @@ Future<void> createUserDirectory() async {
 
 }
 
+Future<Map<String,dynamic>> readLastLogin() async {
+  final directory = await getApplicationDocumentsDirectory(); 
+  final cacheLastLogin = File('${directory.path}/$cacheLastLoginFileName');
+
+  String contents = await cacheLastLogin.readAsString();
+  Map<String,dynamic> jsonResponse = jsonDecode(contents) as Map<String, dynamic>;
+  print(jsonResponse);
+  return jsonResponse;
+}
+
+Future<File> storeLastLogin() async {
+  print("Storing login");
+  final directory = await getApplicationDocumentsDirectory();  
+  final cacheLastLogin = File('${directory.path}/$cacheLastLoginFileName');
+
+  Map<String, dynamic> jsonResponse = {"userId": userId, "firstName": firstName, "lastName": lastName};
+  print(jsonResponse);
+  return await cacheLastLogin.writeAsString(json.encode(jsonResponse));
+}
+
 // Get directory for only storing app information
 Future<String> get localPath async {
   final directory = await getApplicationDocumentsDirectory();
   String directoryPath = '${directory.path}/$userId';
   print(directoryPath);
-  Directory newDirectory = Directory(directoryPath);
-
-  if (!(await newDirectory.exists())) {
-    await newDirectory.create(recursive: true);
-    print("Directory created: $directoryPath");
-  } else {
-    print("Directory already exists: $directoryPath");
-  }
 
   return directoryPath; 
 }
@@ -90,6 +102,8 @@ Future<File> writeCacheOfUserMultipleUpload(List<String> fileNames) async {
   for (String fileName in fileNames) {
     jsonResponse[fileName] = true;
   }
+
+  print("WRITING MULTIPLE");
 
   return await path.writeAsString(json.encode(jsonResponse));
 }
