@@ -24,7 +24,9 @@ class UpperCaseTextFormatter extends TextInputFormatter {
   }
 }
 
-class _SettingsPageState extends State<SettingsPage> {
+class _SettingsPageState extends State<SettingsPage>
+    with SingleTickerProviderStateMixin {
+  late TabController controller;
   final studyIdController = TextEditingController(text: studyId);
   final firstNameController = TextEditingController(text: firstName);
   final lastNameController = TextEditingController(text: lastName);
@@ -35,6 +37,14 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     super.initState();
     _focusNode = FocusNode();
+    controller = TabController(length: 2, vsync: this);
+
+    // Add the listener to dismiss the keyboard when tab index changes
+    controller.addListener(() {
+      if (controller.indexIsChanging) {
+        FocusScope.of(context).unfocus();
+      }
+    });
   }
 
   @override
