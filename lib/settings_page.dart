@@ -1,5 +1,4 @@
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
-import 'package:amplify_authenticator/amplify_authenticator.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -13,6 +12,7 @@ class SettingsPage extends StatefulWidget {
   State<SettingsPage> createState() => _SettingsPageState();
 }
 
+// Forces any text to uppercase
 class UpperCaseTextFormatter extends TextInputFormatter {
   @override
   TextEditingValue formatEditUpdate(
@@ -56,13 +56,14 @@ class _SettingsPageState extends State<SettingsPage>
     super.dispose();
   }
 
+  // User signs out of the app
   Future<void> _signOut(context) async {
     final result = await Amplify.Auth.signOut(
       options: const SignOutOptions(globalSignOut: true),
     );
 
     if (result is CognitoCompleteSignOut) {
-      safePrint('Signed out');
+      // safePrint('Signed out');
 
       setState(() {
         // Reset all data
@@ -81,6 +82,7 @@ class _SettingsPageState extends State<SettingsPage>
     }
   }
 
+  // Show popup dialog that saving studyId confirmed
   void _showSaveConfirmation(BuildContext context) {
     showDialog(
       context: context,

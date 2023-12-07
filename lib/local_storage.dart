@@ -5,6 +5,7 @@ import 'package:csv/csv.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 
+// User directory is made in local storage if it doesn't exist
 Future<void> createUserDirectory() async {
   final directory = await getApplicationDocumentsDirectory();
   
@@ -12,30 +13,32 @@ Future<void> createUserDirectory() async {
   Directory newDirectory = Directory(directoryPath);
   if (!(await newDirectory.exists())) {
     await newDirectory.create(recursive: true);
-    print("Directory created: $directoryPath");
+    // print("Directory created: $directoryPath");
   } else {
-    print("Directory already exists: $directoryPath");
+    // print("Directory already exists: $directoryPath");
   }
 
 }
 
+// Reads the last user information that was logged in if offline
 Future<Map<String,dynamic>> readLastLogin() async {
   final directory = await getApplicationDocumentsDirectory(); 
   final cacheLastLogin = File('${directory.path}/$cacheLastLoginFileName');
 
   String contents = await cacheLastLogin.readAsString();
   Map<String,dynamic> jsonResponse = jsonDecode(contents) as Map<String, dynamic>;
-  print(jsonResponse);
+  // print(jsonResponse);
   return jsonResponse;
 }
 
+// Stores the current user information for offline usage
 Future<File> storeLastLogin() async {
-  print("Storing login");
+  // print("Storing login");
   final directory = await getApplicationDocumentsDirectory();  
   final cacheLastLogin = File('${directory.path}/$cacheLastLoginFileName');
 
   Map<String, dynamic> jsonResponse = {"userId": userId, "firstName": firstName, "lastName": lastName};
-  print(jsonResponse);
+  // print(jsonResponse);
   return await cacheLastLogin.writeAsString(json.encode(jsonResponse));
 }
 
@@ -75,7 +78,7 @@ Future<File> writeCacheOfUser(String name, String value) async {
   return await path.writeAsString(json.encode(jsonResponse));
 }
 
-// Stores misc information about user's actions (ex: studyid, what files were uploaded)
+// Stores information about what file was uploaded
 Future<File> writeCacheOfUserUpload(String fileName) async {
   final path = await getLocalFile(cacheFileName);
   Map<String, dynamic> jsonResponse = {};
@@ -89,7 +92,7 @@ Future<File> writeCacheOfUserUpload(String fileName) async {
   return await path.writeAsString(json.encode(jsonResponse));
 }
 
-// Stores misc information about user's actions (ex: studyid, what files were uploaded)
+// Stores misc information about what files were uploaded
 Future<File> writeCacheOfUserMultipleUpload(List<String> fileNames) async {
   final path = await getLocalFile(cacheFileName);
   Map<String, dynamic> jsonResponse = {};
@@ -103,12 +106,12 @@ Future<File> writeCacheOfUserMultipleUpload(List<String> fileNames) async {
     jsonResponse[fileName] = true;
   }
 
-  print("WRITING MULTIPLE");
+  // print("WRITING MULTIPLE");
 
   return await path.writeAsString(json.encode(jsonResponse));
 }
 
-// Stores misc information about user's actions (ex: studyid, what files were uploaded)
+// Deletes information about user's actions what file was deleted
 Future<File> deleteCacheOfUserUpload(String fileName) async {
   final path = await getLocalFile(cacheFileName);
   Map<String, dynamic> jsonResponse = {};
@@ -122,16 +125,16 @@ Future<File> deleteCacheOfUserUpload(String fileName) async {
   return await path.writeAsString(json.encode(jsonResponse));
 }
 
-// Deletes information about user's actions (ex: what files were uploaded)
+// Deletes information about what files were uploaded
 Future<File> deleteCacheOfUserMultipleUpload(List<String> fileNames) async {
   final path = await getLocalFile(cacheFileName);
   Map<String, dynamic> jsonResponse = {};
-  print(path);
+  // print(path);
   if (await path.exists()) {
     String contents = await path.readAsString();
     jsonResponse = jsonDecode(contents) as Map<String, dynamic>;
-    print("JSON");
-    print(jsonResponse);
+    // print("JSON");
+    // print(jsonResponse);
 
     for (String fileName in fileNames) {
       if (fileName.contains('.csv')) {
@@ -168,6 +171,7 @@ Future<void> deleteContent(String fileName) async {
   }
 }
 
+// Gets the list of files in the user directory
 Future<List<File>> get listOfFiles async {
   Directory directory = Directory(await localPath);
   List contents = directory.listSync();
@@ -182,6 +186,7 @@ Future<List<File>> get listOfFiles async {
   return files;
 }
 
+// Reads the specific CSV file from user directory
 Future<List<List<dynamic>>> readContent(File file) async {
   try {
     // Read the file

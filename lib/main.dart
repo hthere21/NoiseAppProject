@@ -5,25 +5,27 @@ import 'settings_page.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_authenticator/amplify_authenticator.dart';
 import 'package:amplify_flutter/amplify_flutter.dart';
-import 'local_storage.dart';
-import 'dart:io';
-import 'aws_service.dart';
 import 'amplifyconfiguration.dart';
 import 'package:amplify_storage_s3/amplify_storage_s3.dart';
 
+// Tracks if all data when app starts is loaded
 bool prevDataLoaded = false;
 bool cacheLoaded = false;
 bool dataSetup = false;
-Map<String, dynamic> cache = {};
-String studyId = "UNDEFINED";
-String userId = "";
-const String cacheFileName = "user.json";
-const String cacheLastLoginFileName = "lastLogin.json";
-String firstName = "";
-String lastName = "";
+
+// Global variables that will be changed throughout the app
+Map<String, dynamic> cache = {}; // Cache for storing current studyId and what files have been already uploaded
+String studyId = "UNDEFINED"; // StudyId to send any uploaded data to
+String userId = ""; // email from current user
+const String cacheFileName = "user.json"; // File to store cache of studyId and files already uploaded
+const String cacheLastLoginFileName = "lastLogin.json"; // Stores the last login of user
+String firstName = ""; // User's first name
+String lastName = ""; // User's last name
+
 // All rows of data to be shown. Keeps track of any additions of recordings
 List<DataItem> data = [];
 
+// Setsup connection to AWS
 Future<void> _configureAmplify() async {
   try {
     final auth = AmplifyAuthCognito();
@@ -37,6 +39,7 @@ Future<void> _configureAmplify() async {
   }
 }
 
+// Starts the app
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await _configureAmplify();

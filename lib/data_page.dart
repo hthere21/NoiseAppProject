@@ -1,13 +1,10 @@
-import 'package:amplify_flutter/amplify_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_noise_app_117/settings_page.dart';
-import 'package:get/get.dart';
 import 'aws_service.dart'; // Import the AWS service file
-import 'package:path_provider/path_provider.dart';
 import 'local_storage.dart';
 import 'dart:io';
 import 'main.dart';
 
+// Columns for the table
 const List<DataColumn> COLUMNS = [
   DataColumn(
     label: Expanded(
@@ -64,6 +61,8 @@ class DataStoragePage extends StatefulWidget {
   _DataStoragePageState createState() => _DataStoragePageState();
 }
 
+
+// Class for storing each information about each row in the data page
 class DataItem {
   final int id;
   String title;
@@ -72,7 +71,7 @@ class DataItem {
 }
 
 class _DataStoragePageState extends State<DataStoragePage> {
-  DataItem? selectedItem;
+  DataItem? selectedItem; // Variable tracks the current selected item
   String editedTitle = "";
   List<bool> selectedItems = List.generate(data.length, (index) => false);
   // Assuming this boolean variable to track whether data is loaded or not
@@ -85,54 +84,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
     // data.sort((a, b) => b.title.compareTo(a.title));
   }
 
-  // void handleMultipleRows() {
-  //   int numItems = selectedItems.where((element) => element).length;
-
-  //   showBottomSheet(
-  //       context: context,
-  //       builder: (context) {
-  //         return Container(
-  //             padding: EdgeInsets.all(16),
-  //             child: Column(
-  //               mainAxisSize: MainAxisSize.min,
-  //               children: <Widget>[
-  //                 Text(
-  //                   'Number of items selected: $numItems',
-  //                 ),
-  //                 SizedBox(height: 16),
-  //                 Row(
-  //                     mainAxisAlignment: MainAxisAlignment.spaceAround,
-  //                     children: <Widget>[
-  //                       ElevatedButton(
-  //                         onPressed: () {
-  //                           try {
-  //                             handleMultipleUploads();
-  //                             _showUploadConfirmation(context);
-  //                           } catch (e) {
-  //                             print(e);
-  //                             _showUploadFailure(context);
-  //                           }
-  //                         },
-  //                         child: const Text('Upload All'),
-  //                       ),
-  //                       ElevatedButton(
-  //                         onPressed: () {
-  //                           try {
-  //                             handleMultipleDeletes();
-  //                             _showDeletionConfirmation(context);
-  //                           } catch (e) {
-  //                             print(e);
-  //                             _showDeletionFailure(context);
-  //                           }
-  //                         },
-  //                         child: const Text('Delete All'),
-  //                       ),
-  //                     ])
-  //               ],
-  //             ));
-  //       });
-  // }
-
+  // Selects the item
   void handleRowPress(DataItem item) {
     setState(() {
       selectedItems = List.generate(data.length, (index) => false);
@@ -214,9 +166,9 @@ class _DataStoragePageState extends State<DataStoragePage> {
     );
   }
 
+  // Creates table for viewing data
   List<DataRow> _createTableRows(int index) {
     List<DataRow> rows = [];
-    // for (DataItem item in data) {
     DataItem item = data[index];
     List<dynamic> itemData = item.data;
     for (Map<dynamic, dynamic> row in itemData) {
@@ -234,40 +186,16 @@ class _DataStoragePageState extends State<DataStoragePage> {
     return rows;
   }
 
-  // List<Map<String, dynamic>> _prepTableRows(int index) {
-  //   List<Map<String, dynamic>> result = [];
-  //   DataItem item = data[index];
-  //   List<Map<String, dynamic>> input = item.data;
-
-  //   input[0].forEach((key, value) {
-  //     Map<String, dynamic> transposedRow = {key: value};
-  //     for (int i = 1; i < input.length; i++) {
-  //       transposedRow[input[i].keys.first] = input[i][key];
-  //     }
-  //     result.add(transposedRow);
-  //   });
-  //   return result;
-  // }
-
+  // Closes popup by removing selected item 
   void handleClosePopup() {
     setState(() {
       selectedItem = null;
     });
   }
 
-  void handleEditTitle() {
-    if (selectedItem != null) {
-      int selectedIndex =
-          data.indexWhere((item) => item.id == selectedItem!.id);
-      data[selectedIndex].title = editedTitle;
-      handleClosePopup();
-    }
-  }
-
+  // Prepares view popup with CSV data
   AlertDialog handleView() {
-    // if (selectedItem != null) {
     List<DataRow> rows = _createTableRows(selectedItem!.id - 1);
-    // List<Map<String,dynamic>> transposedData = _prepTableRows(selectedItem!.id - 1);
     return AlertDialog(
       content: Container(
           width: 300.0,
@@ -289,6 +217,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
     // }
   }
 
+  
   Future<void> handleDelete() async {
     if (selectedItem != null) {
       String fileName = selectedItem!.title;
@@ -306,15 +235,9 @@ class _DataStoragePageState extends State<DataStoragePage> {
   }
 
   Future<void> handleMultipleDeletes() async {
+    // Finds all items that will be deleted
     List<DataItem> allItemsToDelete = [];
     List<String> allFileNamesToDeleteFromCache = [];
-
-    // selectedItems.asMap().forEach((index, selected) async {
-    //   if (selected) {
-    //     allItemsToDelete.add(data[index]);
-    //     allFileNamesToDeleteFromCache.add(data[index].title);
-    //   }
-    // });
 
     for (final (index, selected) in selectedItems.indexed) {
       if (selected) {
@@ -324,14 +247,16 @@ class _DataStoragePageState extends State<DataStoragePage> {
     }
   
     try {
+      // Deletes the data from local storage and cache
       for (DataItem itemToDelete in allItemsToDelete) {
+        await deleteContent(itemToDelete.title);
         cache.removeWhere((key, value) => key == itemToDelete.title);
         data.removeWhere((item) => item.id == itemToDelete.id);
-        await deleteContent(itemToDelete.title);
       }
       await deleteCacheOfUserMultipleUpload(allFileNamesToDeleteFromCache);
     } catch (e) {
-      print("Failed to delte multiple $e");
+      // print("Failed to delte multiple $e");
+      rethrow;
     } finally {
       setState(() {
         selectedItem = null;
@@ -340,6 +265,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
     }
   }
 
+  // Show popup dialog for upload confirmation
   void _showUploadConfirmation(BuildContext context) {
     showDialog(
       context: context,
@@ -360,7 +286,8 @@ class _DataStoragePageState extends State<DataStoragePage> {
       },
     );
   }
-
+  
+  // Show popup dialog for upload failure
   void _showUploadFailure(BuildContext context) {
     showDialog(
       context: context,
@@ -382,6 +309,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
     );
   }
 
+  // Shows popup information that file deletion succeeded
   void _showDeletionConfirmation(BuildContext context) {
     showDialog(
       context: context,
@@ -403,6 +331,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
     );
   }
 
+  // Shows popup information that file deletion failed
   void _showDeletionFailure(BuildContext context) {
     showDialog(
       context: context,
@@ -424,17 +353,16 @@ class _DataStoragePageState extends State<DataStoragePage> {
     );
   }
 
-  // void handleUpload() {
-  //   // // Call the AWS service to handle the upload
-  //   // final awsService = AwsService();
-  //   // awsService.handleUpload(selectedItem);
-  // }
+  // Upload CSV file of selected item
   Future<void> handleUpload() async {
     final awsService = AwsS3Service();
 
     try {
+      // Gets filename from selected item
       String fileName = selectedItem!.title;
       File csvFile = await getLocalFile(fileName);
+
+      // Uploads CSV file and tracks upload status by updating cache
       await awsService.uploadCSVFile(csvFile, studyId);
       setState(() {
         cache[fileName] = true;
@@ -442,50 +370,44 @@ class _DataStoragePageState extends State<DataStoragePage> {
       await writeCacheOfUserUpload(fileName);
     }
     catch (e) {
-      print("FAILING");
+      // print("FAILING");
       rethrow;
     }
     
   }
 
+  // Upload multiple CSV files of selected items
   Future<void> handleMultipleUploads() async {
+    // Stores all filenames that will be uploaded
     final awsService = AwsS3Service();
     List<String> allFilesUploaded = [];
+
     try {
-      // String userId = await awsService.getUserId(); // Test if there is internet
-      // selectedItems.asMap().forEach((index, selected) async {
-      //   if (selected) {
-      //     selectedItem = data[index];
-      //     print(selectedItem!.title);
-      //     // await handleUpload();
-      //     String fileName = selectedItem!.title;
-      //     File csvFile = await getLocalFile(fileName);
-      //     await awsService.uploadCSVFile(csvFile, studyId);
-      //     cache[fileName] = true;
-      //     print("Successfully uploaded $fileName");
-      //     allFilesUploaded.add(fileName);
-      //   }
-      // });
+      // Uploads only data that user selected
       for (final (index, selected) in selectedItems.indexed) {
         if (selected) {
+          // Gets filename from selected data
           selectedItem = data[index];
-          print(selectedItem!.title);
-          // await handleUpload();
+          // print(selectedItem!.title);
           String fileName = selectedItem!.title;
           File csvFile = await getLocalFile(fileName);
+
+          // Uploads file and tracks upload status by updating cache
           await awsService.uploadCSVFile(csvFile, studyId);
           cache[fileName] = true;
-          print("Successfully uploaded $fileName");
+          // print("Successfully uploaded $fileName");
+
+          // Tracks filename that was uploaded
           allFilesUploaded.add(fileName);
         }
-      } 
-
-      // print(allFilesUploaded);
+      }
+      // Updates local cache file with all files uploaded
       await writeCacheOfUserMultipleUpload(allFilesUploaded);
     } catch (e) {
-      print("Error with multiple uploads $e");
+      // safePrint("Error with multiple uploads $e");
       rethrow;
     } finally {
+      // Reset selected data items to 0
       setState(() {
         selectedItem = null;
         selectedItems = List.generate(data.length, (index) => false);
@@ -494,9 +416,10 @@ class _DataStoragePageState extends State<DataStoragePage> {
 
   }
 
+  // Returns filenames with uploaded tag based on cache file
   String checkUploaded(String fileName) {
     if (cache.containsKey(fileName)) {
-      return fileName + " ( UPLOADED )";
+      return "$fileName ( UPLOADED )";
     }
     return fileName;
   }
@@ -505,7 +428,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
   Widget build(BuildContext context) {
     // Check if data is not loaded, display loading page
     if (!prevDataLoaded) {
-      return Scaffold(
+      return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(), // Or your custom loading widget
         ),
@@ -515,7 +438,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
     int selectedCount = selectedItems.where((element) => element).length;
     return Scaffold(
         appBar: AppBar(
-          title: Text('Data Storage Page'),
+          title: const Text('Data Storage Page'),
         ),
         body: Column(children: [
           Expanded(
@@ -577,7 +500,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 25), // Adjust the height as needed
+                    const SizedBox(height: 25), // Adjust the height as needed
                   ],
                 )
               : const SizedBox(), // Empty SizedBox when selectedCount is not greater than 0
