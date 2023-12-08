@@ -106,6 +106,7 @@ class _SettingsPageState extends State<SettingsPage>
 
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text(""),
@@ -122,7 +123,7 @@ class _SettingsPageState extends State<SettingsPage>
             child: Column(
               children: [
                 // Fake CircleAvatar
-                CircleAvatar(
+                const CircleAvatar(
                   radius: 60, // Adjust the radius as needed
                   backgroundColor: Colors.grey, // Set the background color
                   child: Icon(

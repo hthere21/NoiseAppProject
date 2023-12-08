@@ -80,11 +80,13 @@ class _HomePageState extends State<HomePage>
   int initialrecordingTimerDuration = 0;
   List<double> RaValues = [];
 
-  int? sampleRate;
+//Flag for different states
   bool isRecording = false;
   bool isStop = false;
   bool isFinish = false;
   bool isPickingTime = false;
+  //Variables for recording time
+  int? sampleRate;
   List<double> audio = [];
   List<double>? latestBuffer;
   double? recordingTime;
@@ -92,16 +94,17 @@ class _HomePageState extends State<HomePage>
   final audioDataQueue = ListQueue<List<double>>();
   StreamSubscription<List<double>>? audioSubscription;
   DateTime? recordingStartTime;
-  // Checks if the data has already been loaded
 
   @override
   void initState() {
     super.initState();
-
     setUpInfo();
     calculateRaValues();
-    // Start fetching geolocation every 30 seconds
-    Timer.periodic(Duration(seconds: 5), (timer) {
+    // Get the current location immediately when the app starts
+    getCurrentLocation();
+
+    // Start fetching geolocation every 45 seconds
+    Timer.periodic(Duration(seconds: 45), (timer) {
       getCurrentLocation();
     });
   }
@@ -148,7 +151,7 @@ class _HomePageState extends State<HomePage>
 
       // Get current position
       Position position = await Geolocator.getCurrentPosition(
-          desiredAccuracy: LocationAccuracy.high);
+          desiredAccuracy: LocationAccuracy.medium);
 
       if (mounted) {
         setState(() {
@@ -169,7 +172,7 @@ class _HomePageState extends State<HomePage>
     cache = await readCacheOfUser();
     cacheLoaded = true;
     studyId = cache['studyId'];
-    print(cache);
+    // print(cache);
   }
 
   Future<void> loadUserInfo() async {
@@ -177,7 +180,6 @@ class _HomePageState extends State<HomePage>
     lastName = "";
     try {
       final userInfo = await AwsS3Service().getUserInformation();
-      print(userInfo);
       for (var a in userInfo) {
         if (a.userAttributeKey.key == 'name') {
           firstName = a.value;
@@ -191,16 +193,13 @@ class _HomePageState extends State<HomePage>
           userId = a.value;
         }
       }
-      
-    }
-    catch (e){
+    } catch (e) {
       print("Loading local user info");
       Map<String, dynamic> lastLoginInfo = await readLastLogin();
       userId = lastLoginInfo['userId'];
       firstName = lastLoginInfo['firstName'];
       lastName = lastLoginInfo['lastName'];
     }
-
   }
 
   Future<void> loadAllPreviousData() async {
@@ -227,6 +226,7 @@ class _HomePageState extends State<HomePage>
     prevDataLoaded = true;
   }
 
+//export CSV file function
   void exportCSV(String fileName, List<dynamic> noiseData) {
     List<List<dynamic>> rows = [];
     rows.add(columnsForNoiseData);
@@ -246,10 +246,10 @@ class _HomePageState extends State<HomePage>
     writeContent(fileName, csv);
   }
 
+  //This function send the CSV file to data_page.dart
   void sendToDataPage() {
     String fileName = '${DateTime.now().toString()}.csv';
     List<dynamic> newArray = [];
-    print("SendToDataPage");
     for (ProcessedValues newData in dataList) {
       newArray.add(newData.toMap());
     }
@@ -261,11 +261,10 @@ class _HomePageState extends State<HomePage>
     });
   }
 
+  //This function checks the accumulatedArray if there is any value left
   void checkAccumulatedArray() {
-    print("Check AccumulatedArray");
-    print(accumulatedDBAValues);
     // Check if recording has stopped
-    if (accumulatedDBAValues.length > 0) {
+    if (accumulatedDBAValues.isNotEmpty) {
       List<double> valuesToCalculate = List.from(accumulatedDBAValues);
       accumulatedDBAValues.clear();
       // Calculate the sum of dBA values
@@ -293,10 +292,8 @@ class _HomePageState extends State<HomePage>
       );
       dataList.add(processedValues);
     }
-    print(dataList.length);
     //Send data page
     sendToDataPage();
-    // sendToDataPage(); // FOR TESTING ON ANDROID
   }
 
   // Function to process accumulated dBA values
@@ -339,6 +336,7 @@ class _HomePageState extends State<HomePage>
     }
   }
 
+  //Function calculating Ra values
   double calculateRa(double frequency) {
     double f = frequency;
     final numerator = pow(12200, 2) * pow(f, 4);
@@ -355,6 +353,7 @@ class _HomePageState extends State<HomePage>
     return 2.0 + 20 * log10(Ra);
   }
 
+  //Function when user starts timer
   void setRecordingTimer(int durationInSeconds) {
     setState(() {
       recordingTimerDuration = durationInSeconds;
@@ -362,8 +361,9 @@ class _HomePageState extends State<HomePage>
     });
   }
 
+  //Function countdown and set state of the recording screen
   void startCountdown() {
-    countdownTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+    countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() {
         if (recordingTimerDuration == 0) {
           audioSubscription?.cancel();
@@ -378,7 +378,7 @@ class _HomePageState extends State<HomePage>
     });
   }
 
-  /// Call-back on audio sample.
+  /// Call-back on audio sample. This function takes in the stream of microphone data at every 0.435s
   void onAudio(List<double> buffer) async {
     try {
       if (!isPickingTime && !isFinish) {
@@ -485,9 +485,9 @@ class _HomePageState extends State<HomePage>
     });
   }
 
+  //Reset the page state after finish and send everything to data_page
   void reset() {
     setState(() {
-      print(accumulatedDBAValues);
       // Reset your state variables to their initial values
       recordingTimerDuration = 0;
       initialrecordingTimerDuration = 0;
@@ -502,8 +502,10 @@ class _HomePageState extends State<HomePage>
     });
   }
 
+  //Handling stopping the recording
   void stop() {
-    countdownTimer?.cancel(); // Cancel the countdown timer
+    // Cancel the countdown timer
+    countdownTimer?.cancel();
     audioSubscription?.cancel();
     setState(() {
       isRecording = false;
@@ -512,10 +514,10 @@ class _HomePageState extends State<HomePage>
     });
   }
 
+  //When user press finish button
   void finish() {
-    print("finish");
-    print(accumulatedDBAValues);
     checkAccumulatedArray();
+    //Reset the whole app back to initial state
     reset();
     setState(() {
       isStop = false;
@@ -552,25 +554,26 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+  //Pop-up showing recoridng finished
   void showRecordingCanelDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(
+          title: const Text(
             'Recording Canceled',
             textAlign: TextAlign.center,
             style: TextStyle(
               color: Colors.orange, // Set the text color to green
             ),
           ),
-          content: Text('Your recording has been cancelled.'),
+          content: const Text('Your recording has been cancelled.'),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: Text('OK'),
+              child: const Text('OK'),
             ),
           ],
         );
@@ -578,6 +581,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+  //Picking interval widget
   void _showIntervalPicker(BuildContext context) {
     showCupertinoModalPopup(
       context: context,
@@ -591,13 +595,13 @@ class _HomePageState extends State<HomePage>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CupertinoButton(
-                    child: Text('Cancel'),
+                    child: const Text('Cancel'),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
                   ),
                   CupertinoButton(
-                    child: Text('Done'),
+                    child: const Text('Done'),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
@@ -626,6 +630,7 @@ class _HomePageState extends State<HomePage>
     );
   }
 
+  //Timer widget
   void _showTimerPicker(BuildContext context) {
     setRecordingTimer(0);
     int newHours = 0;
@@ -685,16 +690,15 @@ class _HomePageState extends State<HomePage>
   @override
   Widget build(BuildContext context) {
     if (!dataSetup) {
-      return Scaffold(
+      return const Scaffold(
         body: Center(
           child: CircularProgressIndicator(), // Or your custom loading widget
         ),
       );
     }
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('Audio Recording'),
+        title: const Text(''),
       ),
       body: Center(
         child: Column(
@@ -709,7 +713,7 @@ class _HomePageState extends State<HomePage>
                   RichText(
                     text: TextSpan(
                       text: 'Remaining Time: ',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 20,
                         color: Colors.green,
                       ),
@@ -718,7 +722,7 @@ class _HomePageState extends State<HomePage>
                           text: recordingTimerDuration > 0
                               ? '$recordingTimerDuration seconds'
                               : '${recordingTime?.toStringAsFixed(2) ?? "0.00"} seconds',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 20,
                             color: Colors.red,
                           ),
@@ -726,16 +730,16 @@ class _HomePageState extends State<HomePage>
                       ],
                     ),
                   ),
-                  SizedBox(height: 5),
+                  const SizedBox(height: 5),
                   Text(
                     'Interval Selection: ${selectedIntervalInSeconds} seconds',
-                    style: TextStyle(fontSize: 18, color: Colors.black),
+                    style: const TextStyle(fontSize: 18, color: Colors.black),
                   ),
                   Container(
                     margin: EdgeInsets.all(20),
                     child: Text(
                       isRecording ? "MIC: ON" : "MIC: OFF",
-                      style: TextStyle(fontSize: 25, color: Colors.blue),
+                      style: const TextStyle(fontSize: 25, color: Colors.blue),
                     ),
                   ),
                 ],
@@ -753,8 +757,8 @@ class _HomePageState extends State<HomePage>
                 finish();
                 // Add any logic you need for finishing the recording
               },
-              label: Text('Finish'),
-              icon: Icon(Icons.check),
+              label: const Text('Finish'),
+              icon: const Icon(Icons.check),
               backgroundColor: Colors.blue,
             ),
           const SizedBox(width: 2),
@@ -764,16 +768,17 @@ class _HomePageState extends State<HomePage>
                 stop();
                 reset();
               },
-              label: Text('Delete'),
-              icon: Icon(Icons.delete),
+              label: const Text('Delete'),
+              icon: const Icon(Icons.delete),
               backgroundColor: Colors.red,
             ),
 
-          SizedBox(width: 5), // Add spacing between buttons
+          const SizedBox(width: 5), // Add spacing between buttons
           if (!isFinish)
             FloatingActionButton(
               backgroundColor: isRecording ? Colors.red : Colors.green,
-              child: isRecording ? Icon(Icons.stop) : Icon(Icons.mic),
+              child:
+                  isRecording ? const Icon(Icons.pause) : const Icon(Icons.mic),
               onPressed: () {
                 setState(() {
                   isRecording = !isRecording;
@@ -789,7 +794,7 @@ class _HomePageState extends State<HomePage>
           const SizedBox(width: 5),
           if (!isFinish && !isRecording && !isStop)
             FloatingActionButton(
-              child: Icon(Icons.timer),
+              child: const Icon(Icons.timer),
               onPressed: () {
                 _showTimerPicker(context);
               },
@@ -797,7 +802,7 @@ class _HomePageState extends State<HomePage>
           const SizedBox(width: 5),
           if (!isFinish && !isRecording && !isStop)
             FloatingActionButton(
-              child: Icon(Icons.more_time),
+              child: const Icon(Icons.more_time),
               onPressed: () {
                 _showIntervalPicker(context);
               },
@@ -810,8 +815,8 @@ class _HomePageState extends State<HomePage>
                 reset();
                 showRecordingCanelDialog(context);
               },
-              label: Text('Cancel'),
-              icon: Icon(Icons.cancel),
+              label: const Text('Cancel'),
+              icon: const Icon(Icons.cancel),
               backgroundColor: Colors.orange,
             ),
         ],

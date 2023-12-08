@@ -46,7 +46,7 @@ Future<File> storeLastLogin() async {
 Future<String> get localPath async {
   final directory = await getApplicationDocumentsDirectory();
   String directoryPath = '${directory.path}/$userId';
-  print(directoryPath);
+  // print(directoryPath);
 
   return directoryPath; 
 }
@@ -181,8 +181,6 @@ Future<List<File>> get listOfFiles async {
       files.add(file);
     }
   }
-  print("ALL FILES");
-  print(files);
   return files;
 }
 

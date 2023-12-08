@@ -61,7 +61,6 @@ class DataStoragePage extends StatefulWidget {
   _DataStoragePageState createState() => _DataStoragePageState();
 }
 
-
 // Class for storing each information about each row in the data page
 class DataItem {
   final int id;
@@ -186,7 +185,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
     return rows;
   }
 
-  // Closes popup by removing selected item 
+  // Closes popup by removing selected item
   void handleClosePopup() {
     setState(() {
       selectedItem = null;
@@ -217,7 +216,6 @@ class _DataStoragePageState extends State<DataStoragePage> {
     // }
   }
 
-  
   Future<void> handleDelete() async {
     if (selectedItem != null) {
       String fileName = selectedItem!.title;
@@ -245,7 +243,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
         allFileNamesToDeleteFromCache.add(data[index].title);
       }
     }
-  
+
     try {
       // Deletes the data from local storage and cache
       for (DataItem itemToDelete in allItemsToDelete) {
@@ -286,7 +284,7 @@ class _DataStoragePageState extends State<DataStoragePage> {
       },
     );
   }
-  
+
   // Show popup dialog for upload failure
   void _showUploadFailure(BuildContext context) {
     showDialog(
@@ -368,12 +366,10 @@ class _DataStoragePageState extends State<DataStoragePage> {
         cache[fileName] = true;
       });
       await writeCacheOfUserUpload(fileName);
-    }
-    catch (e) {
+    } catch (e) {
       // print("FAILING");
       rethrow;
     }
-    
   }
 
   // Upload multiple CSV files of selected items
@@ -413,7 +409,6 @@ class _DataStoragePageState extends State<DataStoragePage> {
         selectedItems = List.generate(data.length, (index) => false);
       });
     }
-
   }
 
   // Returns filenames with uploaded tag based on cache file
@@ -480,7 +475,6 @@ class _DataStoragePageState extends State<DataStoragePage> {
                               _showUploadFailure(context);
                               print(e);
                             }
-                            
                           },
                           child: Text('Upload $selectedCount items'),
                         ),
