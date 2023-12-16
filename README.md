@@ -43,9 +43,25 @@ The app seamlessly integrates with AWS Amplify, leveraging powerful AWS services
 4. **Configure Amplify**: Update the `amplifyconfiguration.dart` file with your AWS Amplify settings.
 5. **Run the App**: Execute `flutter run` to launch the app.
 
-## Acknowledgments
+## Xcode Test
 
-This app was crafted to streamline noise-related data recording for diverse studies. Special thanks to the Flutter and AWS Amplify communities for their continuous support and invaluable resources.
+### Requirements
+
+- Mac with Xcode installed from Apple Store
+- iPhone and cable to connect to Mac
+- Developer mode turned on in iPhone
+
+### Directions
+
+1. Open `Runner.xcworkspace` under the `ios` folder.
+2. Configure signing and capabilities in Xcode.
+3. Assign "Runner" to your iPhone.
+4. Click the "Play Button" to build the app.
+5. Grant permission on your iPhone.
+6. Re-run the app by clicking the "Play Button."
+
+*Note: The app only runs when the runner is attached to the phone.*
+
 
 ## License
 
