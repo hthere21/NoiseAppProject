@@ -4,40 +4,50 @@ A new Flutter project.
 
 ## Getting Started
 
-Flutter Noise App
-Overview
-The Flutter Noise App is a mobile application built using the Flutter framework for both iOS and Android platforms. This app is designed to facilitate the recording and management of noise-related data for various studies. Users can navigate through different tabs to access features such as Home, Data Storage, and Settings.
+# Flutter Noise App
 
-Features
-Authentication: The app uses Amplify Auth Cognito for user authentication, allowing users to sign up and sign in securely.
+## Overview
 
-Data Recording: Users can record noise-related data, which is stored and managed within the app.
+The **Flutter Noise App** is a versatile mobile application built with the Flutter framework, offering seamless noise-related data recording and management for various studies. With a clean and intuitive interface, users can navigate through different tabs to access essential features, including Home, Data Storage, and Settings.
 
-Data Storage: The app includes a Data tab where users can view and manage their recorded noise-related data.
+## Features
 
-Settings: The Settings tab provides users with customization options and app preferences.
+1. **Authentication**: Secure user authentication is facilitated through Amplify Auth Cognito, enabling users to sign up and sign in effortlessly.
 
-Global Variables
-The app utilizes global variables to store and manage data efficiently:
+2. **Data Recording**: Users can efficiently record and manage noise-related data within the app, providing a robust solution for data collection.
 
-cache: A map to store the current study ID and information about files already uploaded.
-studyId: A string to identify the current study ID for data uploads.
-userId: A string representing the email address of the current user.
-cacheFileName: The file used to store the cache of study ID and uploaded files.
-cacheLastLoginFileName: The file storing the last login timestamp of the user.
-firstName and lastName: Strings representing the user's first and last names.
-data: A list of DataItem objects to store all rows of data shown in the app.
-AWS Amplify Integration
-The app integrates with AWS Amplify to connect to AWS services. The _configureAmplify function sets up the connection to AWS, configuring Amplify with the necessary plugins, such as Amplify Auth Cognito and Amplify Storage S3.
+3. **Data Storage**: The Data tab allows users to conveniently view and manage their recorded noise-related data, ensuring easy access and organization.
 
-Getting Started
-Clone the repository.
-Install Flutter and Dart.
-Run flutter pub get to install dependencies.
-Configure Amplify by updating the amplifyconfiguration.dart file with your AWS Amplify settings.
-Run the app using flutter run.
-Acknowledgments
-This app was created to streamline noise-related data recording and management for various studies. Special thanks to the Flutter and AWS Amplify communities for their support and resources.
+4. **Settings**: Customize your app experience with the Settings tab, providing users with options to tailor preferences to their liking.
 
-License
-This project is licensed under the Noise App Group License - see the LICENSE file for details.
+## Global Variables
+
+The app employs well-organized global variables for efficient data management:
+
+- `cache`: A map storing the current study ID and information about files already uploaded.
+- `studyId`: A unique identifier for the current study, facilitating seamless data uploads.
+- `userId`: The email address of the current user, ensuring personalized interactions.
+- `cacheFileName` and `cacheLastLoginFileName`: Files for storing cache and user login timestamp, respectively.
+- `firstName` and `lastName`: Strings representing the user's first and last names.
+- `data`: A list of `DataItem` objects, providing a structured approach to managing all data entries.
+
+## AWS Amplify Integration
+
+The app seamlessly integrates with AWS Amplify, leveraging powerful AWS services. The `_configureAmplify` function sets up the connection to AWS, configuring necessary plugins like Amplify Auth Cognito and Amplify Storage S3.
+
+## Getting Started
+
+1. **Clone the Repository**: Begin by cloning the repository to your local machine.
+2. **Install Flutter and Dart**: Ensure you have Flutter and Dart installed on your development environment.
+3. **Install Dependencies**: Run `flutter pub get` to install project dependencies.
+4. **Configure Amplify**: Update the `amplifyconfiguration.dart` file with your AWS Amplify settings.
+5. **Run the App**: Execute `flutter run` to launch the app.
+
+## Acknowledgments
+
+This app was crafted to streamline noise-related data recording for diverse studies. Special thanks to the Flutter and AWS Amplify communities for their continuous support and invaluable resources.
+
+## License
+
+This project is licensed under the Noise App Group License. See the [LICENSE](LICENSE) file for detailed information.
+
