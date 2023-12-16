@@ -14,11 +14,11 @@ The **Flutter Noise App** is a versatile mobile application built with the Flutt
 
 1. **Authentication**: Secure user authentication is facilitated through Amplify Auth Cognito, enabling users to sign up and sign in effortlessly.
 
-2. **Data Recording**: Users can efficiently record and manage noise-related data within the app, providing a robust solution for data collection.
+2. **Data Recording**: Users can efficiently record dBA surround noise during real time. The app captures the stream of audio from the mic then using FFT to convert it into dBA values. After finish recording, user can upload or discard the recording.
 
-3. **Data Storage**: The Data tab allows users to conveniently view and manage their recorded noise-related data, ensuring easy access and organization.
+3. **Data Storage**: The Data tab allows users to conveniently view and manage their recorded noise-related data, ensuring easy access and organization. User can upload the data to the AWS S3 buckets or delete it.
 
-4. **Settings**: Customize your app experience with the Settings tab, providing users with options to tailor preferences to their liking.
+4. **Settings**: Customize your app experience with the Settings tab, providing users with options to modify their StudyID for the research.
 
 ## Global Variables
 
