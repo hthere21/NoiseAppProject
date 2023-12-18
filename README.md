@@ -1,10 +1,4 @@
-# flutter_noise_apps_117
-
-A new Flutter project.
-
-## Getting Started
-
-# Flutter Noise App
+# Flutter Noise App Project
 
 ## Overview
 
