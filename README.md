@@ -1,5 +1,5 @@
 # Flutter Noise App Project
-[![My Skills](https://skillicons.dev/icons?i=flutter, dart, aws, figma)](https://skillicons.dev)
+[![My Skills](https://skillicons.dev/icons?i=flutter,dart,aws,figma)](https://skillicons.dev)
 ## Overview
 
 The **Flutter Noise App** is a versatile mobile application built with the Flutter framework, offering seamless noise-related data recording and management for various studies. With a clean and intuitive interface, users can navigate through different tabs to access essential features, including Home, Data Storage, and Settings.
