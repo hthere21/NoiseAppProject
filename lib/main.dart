@@ -100,8 +100,8 @@ class _MyAppState extends State<MyApp> {
           length: 3,
           child: Scaffold(
             appBar: AppBar(
-              title: Text('Noise App'),
-              bottom: TabBar(
+              title:  const Text('Noise App'),
+              bottom: const TabBar(
                 tabs: [
                   Tab(text: 'Home'),
                   Tab(text: 'Data'),
