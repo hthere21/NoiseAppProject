@@ -649,13 +649,13 @@ class _HomePageState extends State<HomePage>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   CupertinoButton(
-                    child: Text('Cancel'),
+                    child: const Text('Cancel'),
                     onPressed: () {
                       Navigator.of(context).pop();
                     },
                   ),
                   CupertinoButton(
-                    child: Text('Done'),
+                    child: const Text('Done'),
                     onPressed: () {
                       int totalSeconds =
                           (newHours * 3600) + (newMinutes * 60) + newSeconds;
@@ -707,7 +707,7 @@ class _HomePageState extends State<HomePage>
             // Conditionally include SoundWaveAnimation when recording
             SoundWaveAnimation(isRecording: isRecording),
             Container(
-              margin: EdgeInsets.all(25),
+              margin: const EdgeInsets.all(25),
               child: Column(
                 children: [
                   RichText(
@@ -736,7 +736,7 @@ class _HomePageState extends State<HomePage>
                     style: const TextStyle(fontSize: 18, color: Colors.black),
                   ),
                   Container(
-                    margin: EdgeInsets.all(20),
+                    margin: const EdgeInsets.all(20),
                     child: Text(
                       isRecording ? "MIC: ON" : "MIC: OFF",
                       style: const TextStyle(fontSize: 25, color: Colors.blue),
