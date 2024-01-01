@@ -4,6 +4,7 @@
 
 The **Flutter Noise App** is a versatile mobile application built with the Flutter framework, offering seamless noise-related data recording and management for various studies. With a clean and intuitive interface, users can navigate through different tabs to access essential features, including Home, Data Storage, and Settings.
 
+**Final Demo:** https://youtu.be/F8IYeJQc9fc
 ## Features
 
 1. **Authentication**: Secure user authentication is facilitated through Amplify Auth Cognito, enabling users to sign up and sign in effortlessly.
