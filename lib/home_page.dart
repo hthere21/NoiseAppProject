@@ -104,7 +104,7 @@ class _HomePageState extends State<HomePage>
     getCurrentLocation();
 
     // Start fetching geolocation every 45 seconds
-    Timer.periodic(Duration(seconds: 45), (timer) {
+    Timer.periodic(const Duration(seconds: 45), (timer) {
       getCurrentLocation();
     });
   }
@@ -532,20 +532,20 @@ class _HomePageState extends State<HomePage>
       builder: (BuildContext context) {
         return Center(
           child: AlertDialog(
-            title: Text(
+            title: const Text(
               'Recording Finished',
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: Colors.green, // Set the text color to green
               ),
             ),
-            content: Text('Your recording has been completed successfully.'),
+            content: const Text('Your recording has been completed successfully.'),
             actions: [
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
-                child: Text('OK'),
+                child: const Text('OK'),
               ),
             ],
           ),
@@ -689,6 +689,7 @@ class _HomePageState extends State<HomePage>
 
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     if (!dataSetup) {
       return const Scaffold(
         body: Center(
@@ -732,7 +733,7 @@ class _HomePageState extends State<HomePage>
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    'Interval Selection: ${selectedIntervalInSeconds} seconds',
+                    'Interval Selection: $selectedIntervalInSeconds seconds',
                     style: const TextStyle(fontSize: 18, color: Colors.black),
                   ),
                   Container(
